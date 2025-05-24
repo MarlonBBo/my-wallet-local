@@ -1,4 +1,5 @@
 import BtnPlus from '@/components/BtnPlus';
+import { useTransactionDatabase } from '@/database/useTransactionDatabase';
 import { RootState } from '@/store'; // ajuste conforme o caminho do seu store
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -6,29 +7,63 @@ import { StatusBar } from 'expo-status-bar';
 import React from "react";
 import { InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Pie, PolarChart } from 'victory-native';
 
-const DATA = [
-  { label: "Educação", value: 10, color: "#FF0000" },
-  { label: "Casa", value: 20.00, color: "#00FF00" },
-  { label: "Alimentação", value: 30, color: "#0000FF" },
-  { label: "Outros...", value: 70, color: "#696969" },
-];
 
 export default function Home() {
+
+const transactionDatabase = useTransactionDatabase();
+const dispatch = useDispatch();
 
 const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
+  const task = InteractionManager.runAfterInteractions(() => {
+    const carregarSaldos = async () => {
+
+      const newDataCategoria = await transactionDatabase.GetSomaPorCategoria();
+      dispatch({ type: 'dataCategoria/setDataCategoria', payload: newDataCategoria });
+
+      const newTotal = await transactionDatabase.GetTotalValue();
+      dispatch({ type: 'total/setTotal', payload: newTotal });
+
+      const newTotalReceitas = await transactionDatabase.GetReceitas();
+      dispatch({ type: 'receitas/setReceitas', payload: newTotalReceitas });
+
+      const newTotalDespesas = await transactionDatabase.GetDespesas();
+      dispatch({ type: 'despesas/setDespesas', payload: newTotalDespesas });
+
       setReady(true);
-    });
+    };
+
+    carregarSaldos();
+  });
 
   return () => task.cancel();
 }, []);
 
   const total = useSelector((state: RootState) => state.total.value);
+  const Receitas = useSelector((state: RootState) => state.receitas.value);
+  const Despesas = useSelector((state: RootState) => state.despesas.value);
+  const dataCaregoria = useSelector((state: RootState) => state.dataCategoria.lista);
+
+
+  function handleRemoveTransactions() {
+    transactionDatabase.DeleteAllTransactions();
+    dispatch({ type: 'total/setTotal', payload: 0 });
+    dispatch({ type: 'receitas/setReceitas', payload: 0 });
+    dispatch({ type: 'despesas/setDespesas', payload: 0 });
+    dispatch({ type: 'dataCategoria/setDataCategoria', payload: []});
+  }
+
+    const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.amount - a.amount);
+
+    const dataGrafico = dataCaregoriaOrdenada.map(item => ({
+      label: item.categoria,
+      value: item.amount,
+      color: item.cor,
+    }));
 
   return (
     <View style={styles.container}>
@@ -52,43 +87,59 @@ const [ready, setReady] = React.useState(false);
 
         <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: 10 }}>
           <Text style={{ fontWeight: "600", fontSize: 15, color: "#696969" }}>Saldo Total</Text>
-          <Text style={{ fontWeight: "bold", fontSize: 30 }}>R${total.toFixed(2)}</Text>
+          <Text style={{ fontWeight: "bold", fontSize: 30 }}>R${total}</Text>
 
-          <TouchableOpacity style={{ width: 40, height: 30, alignItems: 'center', justifyContent: 'center', borderColor: '#696969' }}>
+          <TouchableOpacity onPress={handleRemoveTransactions} style={{ width: 40, height: 30, alignItems: 'center', justifyContent: 'center', borderColor: '#696969' }}>
             <Feather name="eye" size={20} color="#A9A9A9" style={{ marginTop: 10 }} />
           </TouchableOpacity>
 
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", paddingTop: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                <Feather name='arrow-up' size={30} color={'#32CD32'} />
+          {Receitas === 0 && Despesas === 0 ? (
+            <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
+              Nenhuma movimentação registrada no período.
+            </Text>
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name='arrow-up' size={30} color={'#32CD32'} />
+                </View>
+                <View>
+                  <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>R${Receitas}</Text>
+                </View>
               </View>
-              <View>
-                <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
-                <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>R$6,600.00</Text>
-              </View>
-            </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                <Feather name='arrow-down' size={30} color={'#FF3009'} />
-              </View>
-              <View>
-                <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
-                <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>R$2,500.00</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginRight: 10 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name='arrow-down' size={30} color={'#FF3009'} />
+                </View>
+                <View>
+                  <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>R${Despesas}</Text>
+                </View>
               </View>
             </View>
-          </View>
+          )}
+
         </View>
       </SafeAreaView>
 
       <Text style={{ fontSize: 20, fontWeight: "bold", paddingVertical: 20, paddingHorizontal: 10, paddingBottom: 5, color: "#696969" }}>Despesas por categoria</Text>
 
-      {ready && (
+      {
+        !ready ? (
+          <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
+            Carregando...
+          </Text>
+        ) : dataCaregoria.length === 0 ? (
+          <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
+            Não há dados de despesas
+          </Text>
+        ) : (
           <View style={styles.graphContainer}>
-            <View style={{height: 100, width: 100}}>
+            <View style={{ height: 100, width: 100 }}>
               <PolarChart
-                data={DATA}
+                data={dataGrafico}
                 labelKey={"label"}
                 valueKey={"value"}
                 colorKey={"color"}
@@ -97,18 +148,21 @@ const [ready, setReady] = React.useState(false);
               </PolarChart>
             </View>
             <SafeAreaView style={styles.datas}>
-              {DATA.map((item, index) => (
-                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%'}}>
-                  <View style={{ width: 10, height: 10, backgroundColor: item.color, borderRadius: 10, marginRight: 10 }} />
-                  <Text style={{ fontSize: 16 , color: "#696969", fontWeight: '600'}}>{item.label} </Text>
-                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>R${item.value},00</Text>
+              {dataCaregoriaOrdenada.map((item, index) => (
+                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
+                  <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
+                  <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.categoria} </Text>
+                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>R${item.amount},00</Text>
                 </View>
               ))}
             </SafeAreaView>
           </View>
-        )}
+        )
+      }
 
-      <BtnPlus />
+
+
+       <BtnPlus />
     </View>
   );
 }

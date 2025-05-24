@@ -31,8 +31,12 @@ export default function Transaction() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.transactionItem}>
-            <Text style={styles.text}>{item.category} - {item.type} - R$ {item.value}</Text>
-            <Text style={styles.date}>{new Date(item.date).toLocaleDateString()}</Text>
+            <Text style={styles.text}>
+              {item.category?.titulo} - {item.type} - R$ {item.value}
+            </Text>
+            <Text style={[styles.date, { color: '#888' }]}>
+              {new Date(item.date).toLocaleDateString()}
+            </Text>
           </View>
         )}
       />

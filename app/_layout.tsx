@@ -14,7 +14,17 @@ export default function Layout() {
           <Stack>
             <Stack.Screen 
               name="(tabs)"
-              options={{ headerShown: false }} 
+              options={{ 
+                headerShown: false,
+                animation: 'slide_from_bottom'
+               }} 
+            />
+            <Stack.Screen 
+              name="categorias"
+              options={{ 
+                headerShown: false,
+                animation: 'slide_from_bottom'
+               }}  
             />
           </Stack>
         </SQLiteProvider>

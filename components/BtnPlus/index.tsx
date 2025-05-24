@@ -3,12 +3,14 @@ import { setDataCategoria } from '@/store/dataCategoriaSlice';
 import { setTotal } from '@/store/totalSlice';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch } from 'react-redux';
 
 export default function BtnPlus() {
+
+  const router = useRouter();
 
   const transactionDatabase = useTransactionDatabase();
 
@@ -82,40 +84,50 @@ export default function BtnPlus() {
     }
   };
 
+  function nextScream(){
+    router.push('/categorias') 
+    setModalVisible(false)
+  }
+
   return (
     <View style={styles.container}>
 
       <Modal
         visible={modalVisible}
         transparent
-        animationType="none"
+        animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
-            <View style={{alignItems:"flex-end", width: "100%"}}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Feather name='x' size={20} color={"black"}/>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" ,alignItems:"flex-end", width: "100%"}}>
+              {tipo === 'saida' ? (
+                <Text style={{fontWeight: "700", textAlign: "center", fontSize: 20}}>Definir Saída:</Text>
+              ) :
+              (
+                <Text style={{fontWeight: "700", textAlign: "center", fontSize: 20}}>Definir Entrada:</Text>
+              )
+              }
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={{backgroundColor: "#7C4DFF", width: 30, height: 30,borderRadius: 20, justifyContent: "center", alignContent: "center"}}>
+                <Feather name='x' size={20} color={"#FFF"} style={{textAlign: "center"}}/>
               </TouchableOpacity>
             </View>
 
-            {/* Abas de Entrada e Saída */}
             <View style={styles.tabContainer}>
               <TouchableOpacity 
                 style={[styles.tabButton, tipo === 'saida' && styles.activeTab]} 
                 onPress={() => setTipo('saida')}
               >
-                <Text style={styles.tabText}>Saída</Text>
+                <Text style={[styles.tabText, tipo === 'saida' && styles.activeText]}>Saída</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.tabButton, tipo === 'entrada' && styles.activeTab]} 
                 onPress={() => setTipo('entrada')}
               >
-                <Text style={styles.tabText}>Entrada</Text>
+                <Text style={[styles.tabText, tipo === 'entrada' && styles.activeText]}>Entrada</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Campo de valor (sempre) */}
             <TextInput 
               style={styles.input} 
               placeholder="Digite o valor" 
@@ -124,7 +136,6 @@ export default function BtnPlus() {
               value={valor} 
             />
 
-            {/* Select de categoria (apenas para Saída) */}
             {tipo === 'saida' && (
               <View style={styles.pickerContainer}>
                 <Picker
@@ -135,7 +146,9 @@ export default function BtnPlus() {
                   }}
                   style={{ width: '100%' }}
                 >
-                  <Picker.Item label="Selecione uma categoria" value="" />
+                  {categoria === null && (
+                    <Picker.Item label="Selecione uma categoria" value="" />
+                  )}
                   {categorias.map((cat) => (
                     <Picker.Item key={cat.id} label={cat.titulo} value={cat.id} />
                   ))}
@@ -143,10 +156,16 @@ export default function BtnPlus() {
               </View>
             )}
 
-            <TouchableOpacity onPress={handleAddTransaction} style={styles.addButton}>
-              <Text style={{ color: 'white', fontSize: 15, fontWeight: "600" }}>Adicionar</Text>
-            </TouchableOpacity>
-
+            {tipo === 'saida' && (
+              <View>
+                <TouchableOpacity  style={styles.addCategoria} onPress={()=> nextScream()}>
+                  <Text style={{ color: '#7C4DFF', fontSize: 15, fontWeight: "600" }}>criar categoria</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+                <TouchableOpacity onPress={handleAddTransaction} style={styles.addButton}>
+                  <Text style={{ color: 'white', fontSize: 15, fontWeight: "600" }}>Adicionar</Text>
+                </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -167,6 +186,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
+  activeText: {
+    color: "#FFF"
+  },
   fab: {
     backgroundColor: '#7C4DFF',
     width: 60,
@@ -183,9 +205,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 3,
   },
+  addCategoria: {
+    borderBottomWidth: 1,
+    paddingBottom: 0,
+    height: 40,
+    justifyContent: "center",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#000000AA',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -193,11 +225,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     width: '80%',
     borderRadius: 12,
-    borderColor: '#696969',
-    borderWidth: 2,
     padding: 20,
     alignItems: 'center',
     gap: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -216,6 +251,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     backgroundColor: '#7C4DFF',
+    color: "#FFF"
   },
   tabText: {
     color: '#000',

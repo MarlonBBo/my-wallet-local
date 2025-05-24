@@ -24,13 +24,18 @@ export type CreateTransactionDTO = {
   date: string;
 };
 
+export type CreateCategoriaDTO = {
+  titulo: string;
+  cor: string;
+};
+
 type CategoriaResumo = Pick<CategoriaProps, 'titulo' | 'valor' | 'cor'>;
 
 // Queries SQL
 const QUERIES = {
   INSERT_CATEGORIA: `
-    INSERT OR IGNORE INTO categorias (id, titulo, cor, valor)
-    VALUES (?, ?, ?, ?)
+    INSERT OR IGNORE INTO categorias (titulo, cor)
+    VALUES (?, ?)
   `,
   GET_CATEGORIA_BY_ID: "SELECT * FROM categorias WHERE id = ?",
   INSERT_TRANSACTION: `
@@ -74,10 +79,10 @@ export function useTransactionDatabase() {
   const db = useSQLiteContext();
 
   // Categorias
-  const CreateCategoria = async (data: CategoriaProps) => {
+  const CreateCategoria = async (data: CreateCategoriaDTO) => {
     try {
       await db.runAsync(QUERIES.INSERT_CATEGORIA, 
-        [data.id, data.titulo, data.cor, data.valor]);
+        [ data.titulo, data.cor ]);
     } catch (error) {
       console.error("Erro ao criar categoria:", error);
       throw error;

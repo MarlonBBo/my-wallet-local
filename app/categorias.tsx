@@ -1,21 +1,22 @@
+import { useTransactionDatabase } from "@/database/useTransactionDatabase";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-// import WheelColorPicker from 'react-native-wheel-color-picker'; // Removido
+import { Alert, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useDispatch } from "react-redux";
 
 export default function Categorias() {
+
+  const transactionDatabase = useTransactionDatabase();
+
   const router = useRouter();
-  const [categorias, setCategorias] = useState([
-    { id: 1, titulo: 'Alimentação', cor: '#FF5722', valor: 0 },
-    { id: 2, titulo: 'Transporte', cor: '#03A9F4', valor: 0 },
-  ]);
 
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novaCor, setNovaCor] = useState('#000000');
-  const [novoValor, setNovoValor] = useState('');
   const [pickerVisible, setPickerVisible] = useState(false);
+
+  const dispatch = useDispatch();
 
   // Cores predefinidas
   const coresDisponiveis = [
@@ -23,23 +24,27 @@ export default function Categorias() {
     '#00BCD4', '#FF9800', '#8BC34A', '#795548', '#607D8B', '#F44336',
   ];
 
-  const adicionarCategoria = () => {
+  const adicionarCategoria = async () => {
     if (novaCategoria.trim() === '') {
       Alert.alert("Atenção", "Preencha o nome da categoria!");
       return;
     }
 
-    const nova = {
-      id: Date.now(),
-      titulo: novaCategoria.trim(),
-      cor: novaCor,
-      valor: Number(novoValor) || 0,
-    };
+    try {
 
-    setCategorias([nova, ...categorias]);
+      await transactionDatabase.CreateCategoria({
+        titulo: novaCategoria,
+        cor: novaCor
+      })
+      
+    } catch (error) {
+
+      throw error
+      
+    }
+
     setNovaCategoria('');
     setNovaCor('#000000');
-    setNovoValor('');
   };
 
   const getContraste = (hex: string) => {
@@ -81,21 +86,13 @@ export default function Categorias() {
           <Text style={styles.corText}>Selecionar Cor</Text>
         </TouchableOpacity>
 
-        <TextInput
-          placeholder="Valor inicial (opcional)"
-          placeholderTextColor="#999"
-          style={styles.input}
-          value={novoValor}
-          onChangeText={setNovoValor}
-          keyboardType="numeric"
-        />
 
         <TouchableOpacity style={styles.addButton} onPress={adicionarCategoria}>
           <Feather name="plus" size={24} color="#FFF" />
         </TouchableOpacity>
       </KeyboardAvoidingView>
 
-      <FlatList
+      {/* <FlatList
         data={categorias}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
@@ -104,7 +101,7 @@ export default function Categorias() {
             <Text style={styles.categoriaText}>{item.titulo} - R$ {item.valor.toFixed(2)}</Text>
           </View>
         )}
-      />
+      /> */}
 
       <Modal visible={pickerVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>

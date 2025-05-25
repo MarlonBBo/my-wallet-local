@@ -5,7 +5,9 @@ import { FlatList } from 'react-native-gesture-handler';
 import { TransactionProps, useTransactionDatabase } from '../../database/useTransactionDatabase';
 
 export default function Transaction() {
+
   const [transactions, setTransactions] = useState<TransactionProps[]>([]);
+  
   const transactionDatabase = useTransactionDatabase();
 
   useFocusEffect(

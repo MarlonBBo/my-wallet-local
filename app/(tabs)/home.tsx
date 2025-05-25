@@ -66,6 +66,8 @@ const [ready, setReady] = React.useState(false);
       color: item.cor,
     }));
 
+    const categoriasComValor = dataCaregoriaOrdenada.filter(item => item.valor > 0);
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
@@ -132,7 +134,7 @@ const [ready, setReady] = React.useState(false);
           <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
             Carregando...
           </Text>
-        ) : dataCaregoria.length === 0 ? (
+        ) : !(categoriasComValor.length > 0) ? (
           <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
             Não há dados de despesas
           </Text>
@@ -149,7 +151,7 @@ const [ready, setReady] = React.useState(false);
               </PolarChart>
             </View>
             <SafeAreaView style={styles.datas}>
-              {dataCaregoriaOrdenada.map((item, index) => (
+              {categoriasComValor.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
                   <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
                   <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo} </Text>

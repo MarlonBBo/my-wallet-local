@@ -3,8 +3,8 @@ import { setDataCategoria } from '@/store/dataCategoriaSlice';
 import { setTotal } from '@/store/totalSlice';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch } from 'react-redux';
 
@@ -22,16 +22,16 @@ export default function BtnPlus() {
 
   const dispatch = useDispatch();
 
-  useFocusEffect(
-    useCallback(() => {
-      async function loadCategorias() {
-        const lista = await transactionDatabase.GetAllCategorias();
-        setCategorias(lista);
-      }
+  useEffect(() => {
+  if (modalVisible) {
+    async function loadCategorias() {
+      const lista = await transactionDatabase.GetAllCategorias();
+      setCategorias(lista);
+    }
 
-      loadCategorias();
-    }, [transactionDatabase])
-  );
+    loadCategorias();
+  }
+}, [modalVisible]);
 
   const handleAddTransaction = async () => {
     if (tipo === 'saida' && (!categoria || valor === '')) {
@@ -62,8 +62,9 @@ export default function BtnPlus() {
       dispatch(setTotal(newTotal));
 
       const newDataCategoria = newDataCategoriaRaw.map((item) => ({
-        categoria: item.titulo,
-        amount: item.valor,
+        id: item.id,
+        titulo: item.titulo,
+        valor: item.valor,
         cor: item.cor,
       }));
 

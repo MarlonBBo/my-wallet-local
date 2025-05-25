@@ -1,10 +1,13 @@
 import { useTransactionDatabase } from "@/database/useTransactionDatabase";
+import { RootState } from "@/store";
+import { addCategoria, removeCategoria, setDataCategoria } from "@/store/dataCategoriaSlice";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useDispatch } from "react-redux";
+import { FlatList } from "react-native-gesture-handler";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Categorias() {
 
@@ -18,7 +21,21 @@ export default function Categorias() {
 
   const dispatch = useDispatch();
 
-  // Cores predefinidas
+    useEffect(() => {
+    async function fetchCategorias() {
+      try {
+        const result = await transactionDatabase.GetAllCategorias();
+        dispatch(setDataCategoria(result));
+        console.log("Categorias fetched:", result);
+      } catch (error) {
+        console.error("Error fetching categorias:", error);
+      }
+    }
+
+    fetchCategorias();
+  }, []);
+
+
   const coresDisponiveis = [
     '#FF5722', '#03A9F4', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63',
     '#00BCD4', '#FF9800', '#8BC34A', '#795548', '#607D8B', '#F44336',
@@ -29,32 +46,46 @@ export default function Categorias() {
       Alert.alert("Atenção", "Preencha o nome da categoria!");
       return;
     }
-
     try {
-
-      await transactionDatabase.CreateCategoria({
+        const result = await transactionDatabase.CreateCategoria({
         titulo: novaCategoria,
-        cor: novaCor
+        cor: novaCor,
+        valor: 0
       })
       
-    } catch (error) {
+      dispatch(addCategoria(result));
 
-      throw error
-      
+    } catch (error) {
+      throw error  
     }
 
     setNovaCategoria('');
     setNovaCor('#000000');
+
+    
   };
 
-  const getContraste = (hex: string) => {
-    if (!hex) return '#FFF';
-    const r = parseInt(hex.substr(1, 2), 16);
-    const g = parseInt(hex.substr(3, 2), 16);
-    const b = parseInt(hex.substr(5, 2), 16);
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    return yiq >= 128 ? '#000' : '#FFF';
+  const deleteCategoria = async (id: number) => {
+    try {
+      await transactionDatabase.DeleteCategoriaById(id);
+      dispatch(removeCategoria(id));
+    } catch (error) {
+      console.error("Erro ao deletar categoria:", error);
+    }
   };
+
+  const confirmarExclusao = (id: number) => {
+    Alert.alert(
+      "Confirmação",
+      "Tem certeza que deseja excluir esta categoria?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Excluir", style: "destructive", onPress: () => deleteCategoria(id) }
+      ]
+    );
+  };
+
+  const dataCaregoria = useSelector((state: RootState) => state.dataCategoria.lista);
 
   return (
     <View style={styles.container}>
@@ -92,16 +123,19 @@ export default function Categorias() {
         </TouchableOpacity>
       </KeyboardAvoidingView>
 
-      {/* <FlatList
-        data={categorias}
-        keyExtractor={(item) => item.id.toString()}
+      <FlatList
+        data={dataCaregoria}
+        keyExtractor={(item) => item.id != null ? item.id.toString() : ""}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
           <View style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
-            <Text style={styles.categoriaText}>{item.titulo} - R$ {item.valor.toFixed(2)}</Text>
+            <Text style={styles.categoriaText}>{item.titulo} - R$ {(item.valor ?? 0).toFixed(2)}</Text>
+            <TouchableOpacity onPress={()=> confirmarExclusao(item.id)} style={{backgroundColor: "red", width: 30, height: 30, alignItems: "center", justifyContent: "center", borderRadius: 10}}>
+              <Feather name="trash-2" size={20} color={"white"}/>
+            </TouchableOpacity>
           </View>
         )}
-      /> */}
+      />
 
       <Modal visible={pickerVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
@@ -190,6 +224,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   categoriaItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,

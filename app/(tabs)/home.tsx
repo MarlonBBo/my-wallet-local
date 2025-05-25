@@ -51,17 +51,18 @@ const [ready, setReady] = React.useState(false);
 
   function handleRemoveTransactions() {
     transactionDatabase.DeleteAllTransactions();
+    transactionDatabase.DeleteAllCategoria();
     dispatch({ type: 'total/setTotal', payload: 0 });
     dispatch({ type: 'receitas/setReceitas', payload: 0 });
     dispatch({ type: 'despesas/setDespesas', payload: 0 });
     dispatch({ type: 'dataCategoria/setDataCategoria', payload: []});
   }
 
-    const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.amount - a.amount);
+    const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
 
     const dataGrafico = dataCaregoriaOrdenada.map(item => ({
-      label: item.categoria,
-      value: item.amount,
+      label: item.titulo,
+      value: item.valor,
       color: item.cor,
     }));
 
@@ -151,8 +152,8 @@ const [ready, setReady] = React.useState(false);
               {dataCaregoriaOrdenada.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
                   <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
-                  <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.categoria} </Text>
-                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>R${item.amount},00</Text>
+                  <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo} </Text>
+                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>R${item.valor},00</Text>
                 </View>
               ))}
             </SafeAreaView>

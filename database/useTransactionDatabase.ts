@@ -27,11 +27,10 @@ export type CreateTransactionDTO = {
 export type CreateCategoriaDTO = {
   titulo: string;
   cor: string;
+  valor: number
 };
 
-type CategoriaResumo = Pick<CategoriaProps, 'titulo' | 'valor' | 'cor'>;
 
-// Queries SQL
 const QUERIES = {
   INSERT_CATEGORIA: `
     INSERT OR IGNORE INTO categorias (titulo, cor)
@@ -72,22 +71,34 @@ const QUERIES = {
   GET_DESPESAS: "SELECT SUM(value) as total FROM transactions WHERE type = 'saida'",
   DELETE_ALL_TRANSACTIONS: "DELETE FROM transactions",
   GET_CATEGORIAS_SUM: "SELECT titulo, cor, valor FROM categorias",
-  GET_ALL_CATEGORIAS: "SELECT * FROM categorias ORDER BY titulo ASC"
+  GET_ALL_CATEGORIAS: "SELECT * FROM categorias ORDER BY titulo ASC",
+  DELETE_CATEGORIA_BY_ID: "DELETE FROM categorias WHERE id = ?",
+  DELETE_ALL_CATEGORY: "DELETE FROM categorias"
+
 };
 
 export function useTransactionDatabase() {
   const db = useSQLiteContext();
 
   // Categorias
-  const CreateCategoria = async (data: CreateCategoriaDTO) => {
-    try {
-      await db.runAsync(QUERIES.INSERT_CATEGORIA, 
-        [ data.titulo, data.cor ]);
-    } catch (error) {
-      console.error("Erro ao criar categoria:", error);
-      throw error;
-    }
-  };
+  const CreateCategoria = async (data: CreateCategoriaDTO): Promise<CategoriaProps> => {
+  try {
+    await db.runAsync(QUERIES.INSERT_CATEGORIA, [data.titulo, data.cor]);
+
+    const ultimaCategoria = await db.getFirstAsync<CategoriaProps>(
+      `SELECT * FROM categorias ORDER BY id DESC LIMIT 1`
+    );
+
+    if (!ultimaCategoria) throw new Error("Categoria não encontrada após inserção.");
+
+    // Inicializa o valor como 0 (pode ajustar se precisar)
+    return { ...ultimaCategoria, valor: 0 };
+  } catch (error) {
+    console.error("Erro ao criar categoria:", error);
+    throw error;
+  }
+};
+
 
   const GetCategoriaById = async (id: number): Promise<CategoriaProps | null> => {
     try {
@@ -101,13 +112,40 @@ export function useTransactionDatabase() {
   };
 
   const GetAllCategorias = async (): Promise<CategoriaProps[]> => {
-    try {
-      return await db.getAllAsync<CategoriaProps>(QUERIES.GET_ALL_CATEGORIAS);
-    } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
+    console.trace("GetAllCategorias foi chamado");
+  try {
+    if (!db) {
+      console.warn('DB não está pronto ainda');
       return [];
     }
-  };
+
+    const data = await db.getAllAsync<CategoriaProps>(QUERIES.GET_ALL_CATEGORIAS);
+    console.log('Categorias encontradas:', data);
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar categorias:", error);
+    return [];
+  }
+};
+
+
+  const DeleteCategoriaById = async (id: number) => {
+    try {
+
+      return await db.runAsync(QUERIES.DELETE_CATEGORIA_BY_ID, [id])
+      
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const DeleteAllCategoria = async () => {
+    try {
+      await db.execAsync(QUERIES.DELETE_ALL_CATEGORY);
+    } catch (error) {
+      throw error
+    }
+  }
 
   // Transações
   async function CreateTransaction(data: CreateTransactionDTO) {
@@ -207,9 +245,9 @@ export function useTransactionDatabase() {
     }
   };
 
-  const GetSomaPorCategoria = async (): Promise<CategoriaResumo[]> => {
+  const GetSomaPorCategoria = async (): Promise<CategoriaProps[]> => {
     try {
-      return await db.getAllAsync<CategoriaResumo>(QUERIES.GET_CATEGORIAS_SUM);
+      return await db.getAllAsync<CategoriaProps>(QUERIES.GET_CATEGORIAS_SUM);
     } catch (error) {
       console.error("Erro ao buscar resumo por categoria:", error);
       return [];
@@ -220,7 +258,6 @@ export function useTransactionDatabase() {
   const DeleteAllTransactions = async () => {
   try {
     await db.withTransactionAsync(async () => {
-      // Limpar todas as transações
       await db.execAsync(QUERIES.DELETE_ALL_TRANSACTIONS);
 
       // Resetar os valores das categorias para 0
@@ -243,6 +280,8 @@ export function useTransactionDatabase() {
     GetReceitas,
     GetDespesas,
     GetSomaPorCategoria,
-    DeleteAllTransactions
+    DeleteAllTransactions,
+    DeleteCategoriaById,
+    DeleteAllCategoria,
   };
 }

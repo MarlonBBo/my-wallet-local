@@ -170,7 +170,7 @@ export default function BtnPlus({ categoriaSelecionada }: BtnPlusProps) {
                     <Picker.Item style={{color: 'black'}} label="Selecione uma categoria" value="" />
                   )}
                   {categorias.map((cat) => (
-                    <Picker.Item style={{color: 'black'}} key={cat.id} label={cat.titulo} value={cat.id} />
+                    <Picker.Item style={{color: '#696969'}} key={cat.id} label={cat.titulo} value={cat.id} />
                   ))}
                 </Picker>
               </View>

@@ -69,14 +69,28 @@ const [ready, setReady] = React.useState(false);
   }
 
     const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
+    const topCategorias = dataCaregoriaOrdenada.slice(0, 3); 
+    const outras = dataCaregoriaOrdenada.slice(3);       
 
-    const dataGrafico = dataCaregoriaOrdenada.map(item => ({
+    const outrasSoma = outras.reduce((acc, item) => acc + item.valor, 0);
+
+    const categoriasFinal = [...topCategorias];
+    if (outrasSoma > 0) {
+      categoriasFinal.push({
+        id: 0,
+        titulo: 'Outras',
+        valor: outrasSoma,
+        cor: '#A9A9A9',
+      });
+    }
+
+    const dataGrafico = categoriasFinal.map(item => ({
       label: item.titulo,
       value: item.valor,
       color: item.cor,
     }));
 
-    const categoriasComValor = dataCaregoriaOrdenada.filter(item => item.valor > 0);
+    const categoriasComValor = categoriasFinal.filter(item => item.valor > 0);
 
   return (
     <View style={styles.container}>

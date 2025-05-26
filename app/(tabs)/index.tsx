@@ -3,6 +3,7 @@ import { useTransactionDatabase } from '@/database/useTransactionDatabase';
 import { RootState } from '@/store'; // ajuste conforme o caminho do seu store
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from "react";
 import { InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -14,6 +15,15 @@ import { Pie, PolarChart } from 'victory-native';
 export default function Home() {
 
 const transactionDatabase = useTransactionDatabase();
+
+const { id, titulo, cor} = useLocalSearchParams<{ id: string, titulo: string, cor: string, abrir: string }>();
+
+const categoriaSelecionada = {
+    id,
+    titulo,
+    cor,
+  };
+
 const dispatch = useDispatch();
 
 const [ready, setReady] = React.useState(false);
@@ -165,7 +175,7 @@ const [ready, setReady] = React.useState(false);
 
 
 
-       <BtnPlus />
+       <BtnPlus categoriaSelecionada={categoriaSelecionada}/>
     </View>
   );
 }

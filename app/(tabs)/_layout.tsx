@@ -7,8 +7,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          title: 'index',
           headerShown: false,
+          animation:'shift',
           tabBarIcon: ({ color }) => <Feather size={28} name="home" color={color} />,
         }}
       />
@@ -16,6 +17,7 @@ export default function TabLayout() {
         name="transaction"
         options={{
           title: 'Trasações',
+          animation: "shift",
           headerShown: false,
           tabBarIcon: ({ color }) => <Feather size={28} name="repeat" color={color} />,
         }}

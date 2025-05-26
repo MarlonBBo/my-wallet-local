@@ -8,9 +8,18 @@ import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch } from 'react-redux';
 
-export default function BtnPlus() {
+type BtnPlusProps = {
+  categoriaSelecionada: {
+    id: string;
+    titulo: string;
+    cor: string;
+  };
+};
+
+export default function BtnPlus({ categoriaSelecionada }: BtnPlusProps) {
 
   const router = useRouter();
+
 
   const transactionDatabase = useTransactionDatabase();
 
@@ -23,6 +32,16 @@ export default function BtnPlus() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+
+  if(categoriaSelecionada){
+    setCategoria({
+      id: parseInt(categoriaSelecionada.id),
+      titulo: categoriaSelecionada.titulo,
+      cor: categoriaSelecionada.cor,
+      valor: 0
+    })
+  }
+
   if (modalVisible) {
     async function loadCategorias() {
       const lista = await transactionDatabase.GetAllCategorias();
@@ -147,11 +166,11 @@ export default function BtnPlus() {
                   }}
                   style={{ width: '100%' }}
                 >
-                  {categoria === null && (
-                    <Picker.Item label="Selecione uma categoria" value="" />
+                  {categorias.length === 0 && (
+                    <Picker.Item style={{color: 'black'}} label="Selecione uma categoria" value="" />
                   )}
                   {categorias.map((cat) => (
-                    <Picker.Item key={cat.id} label={cat.titulo} value={cat.id} />
+                    <Picker.Item style={{color: 'black'}} key={cat.id} label={cat.titulo} value={cat.id} />
                   ))}
                 </Picker>
               </View>

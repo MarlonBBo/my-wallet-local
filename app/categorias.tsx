@@ -85,6 +85,14 @@ export default function Categorias() {
     );
   };
 
+  const navigateProps = (id: number, titulo: string, cor: string) => {
+    router.push({
+      pathname: "/(tabs)/home",
+      params: { id: id.toString(), titulo, cor}
+    });
+  };
+
+
   const dataCaregoria = useSelector((state: RootState) => state.dataCategoria.lista);
 
   return (
@@ -125,15 +133,15 @@ export default function Categorias() {
 
       <FlatList
         data={dataCaregoria}
-        keyExtractor={(item) => item.id != null ? item.id.toString() : ""}
+        keyExtractor={(item) => item.id != null ? item.id.toString() : item.titulo}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
-          <View style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
+          <TouchableOpacity onPress={()=> navigateProps(item.id, item.titulo, item.cor)} style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
             <Text style={styles.categoriaText}>{item.titulo} - R$ {(item.valor ?? 0).toFixed(2)}</Text>
             <TouchableOpacity onPress={()=> confirmarExclusao(item.id)} style={{backgroundColor: "red", width: 30, height: 30, alignItems: "center", justifyContent: "center", borderRadius: 10}}>
               <Feather name="trash-2" size={20} color={"white"}/>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         )}
       />
 

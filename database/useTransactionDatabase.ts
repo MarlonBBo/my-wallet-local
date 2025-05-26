@@ -58,7 +58,8 @@ const QUERIES = {
       c.titulo as categoryTitulo, 
       c.cor as categoryCor
     FROM transactions t
-    LEFT JOIN categorias c ON t.category_id = c.id;
+    LEFT JOIN categorias c ON t.category_id = c.id
+    ORDER BY t.date DESC
   `,
   GET_TOTAL_VALUE: `
     SELECT SUM(CASE 

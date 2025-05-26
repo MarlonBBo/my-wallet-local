@@ -87,7 +87,7 @@ export default function Categorias() {
 
   const navigateProps = (id: number, titulo: string, cor: string) => {
     router.push({
-      pathname: "/(tabs)/home",
+      pathname: "/(tabs)",
       params: { id: id.toString(), titulo, cor}
     });
   };

@@ -10,7 +10,7 @@ export default function TabLayout() {
           title: 'home',
           headerShown: false,
           animation:'shift',
-          tabBarIcon: ({ color }) => <Feather size={28} name="home" color={color} />,
+          tabBarIcon: ({ color }) => <Feather size={25} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -19,7 +19,17 @@ export default function TabLayout() {
           title: 'Trasações',
           animation: "shift",
           headerShown: false,
-          tabBarIcon: ({ color }) => <Feather size={28} name="repeat" color={color} />,
+          tabBarIcon: ({ color }) => <Feather size={25} name="repeat" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="categorias"
+        options={{
+          title: 'Categorias',
+          animation: "shift",
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Feather size={25} name="clipboard" color={color} />,
         }}
       />
     </Tabs>

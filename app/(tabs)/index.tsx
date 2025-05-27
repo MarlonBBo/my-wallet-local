@@ -65,7 +65,6 @@ const [ready, setReady] = React.useState(false);
     dispatch({ type: 'receitas/setReceitas', payload: 0 });
     dispatch({ type: 'despesas/setDespesas', payload: 0 });
     dispatch({ type: 'dataCategoria/setDataCategoria', payload: []});
-    console.log("teste: ", dataCaregoria, " - ", outrasSoma, " - ", categoriasFinal, " - ", categoriasComValor, " - ", dataGrafico);
   }
 
     const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
@@ -163,7 +162,7 @@ const [ready, setReady] = React.useState(false);
             Não há dados de despesas
           </Text>
         ) : (
-          <View style={styles.graphContainer}>
+          <TouchableOpacity style={styles.graphContainer}>
             <View style={{ height: 100, width: 100 }}>
               <PolarChart
                 data={dataGrafico}
@@ -183,7 +182,7 @@ const [ready, setReady] = React.useState(false);
                 </View>
               ))}
             </SafeAreaView>
-          </View>
+          </TouchableOpacity>
         )
       }
 

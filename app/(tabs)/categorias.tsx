@@ -5,7 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Alert, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -17,7 +17,7 @@ export default function Categorias() {
 
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novaCor, setNovaCor] = useState('#000000');
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -42,30 +42,28 @@ export default function Categorias() {
   ];
 
   const adicionarCategoria = async () => {
-    if (novaCategoria.trim() === '') {
-      Alert.alert("Atenção", "Preencha o nome da categoria!");
-      return;
-    }
-    try {
-        const result = await transactionDatabase.CreateCategoria({
-        titulo: novaCategoria,
-        cor: novaCor,
-        valor: 0
-      })
-      
-      dispatch(addCategoria(result));
-
-    } catch (error) {
-      throw error  
-    }
-
+  if (novaCategoria.trim() === '') {
+    Alert.alert("Atenção", "Preencha o nome da categoria!");
+    return;
+  }
+  try {
+    setLoading(true);
+    const result = await transactionDatabase.CreateCategoria({
+      titulo: novaCategoria,
+      cor: novaCor,
+      valor: 0
+    });
+    dispatch(addCategoria(result));
     setNovaCategoria('');
     setNovaCor('#000000');
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    
-  };
-
-  const deleteCategoria = async (id: number) => {
+const deleteCategoria = async (id: number) => {
     try {
       await transactionDatabase.DeleteCategoriaById(id);
       dispatch(removeCategoria(id));
@@ -95,6 +93,9 @@ export default function Categorias() {
 
   const dataCaregoria = useSelector((state: RootState) => state.dataCategoria.lista);
 
+  const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
+
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -118,60 +119,53 @@ export default function Categorias() {
           onChangeText={setNovaCategoria}
         />
 
-        <TouchableOpacity
-          style={[styles.corPreview, { backgroundColor: novaCor }]}
-          onPress={() => setPickerVisible(true)}
-        >
-          <Text style={styles.corText}>Selecionar Cor</Text>
-        </TouchableOpacity>
+          <View style={styles.colorPickerContainer}>
+            <FlatList
+              data={coresDisponiveis}
+              keyExtractor={(item) => item}
+              horizontal
+              renderItem={({ item: cor }) => (
+                <TouchableOpacity
+                  style={[styles.colorCircle, { backgroundColor: cor }, novaCor === cor && styles.colorCircleSelected]}
+                  onPress={() => setNovaCor(cor)}
+                >
+                  {novaCor === cor && <Text style={styles.corText}>✔</Text>}
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={{ paddingHorizontal: 8 }}
+            />
+          </View>
 
-
-        <TouchableOpacity style={styles.addButton} onPress={adicionarCategoria}>
-          <Feather name="plus" size={24} color="#FFF" />
+        <TouchableOpacity style={styles.addButton} onPress={adicionarCategoria} disabled={loading}>
+          {loading ? <Text style={{ color: 'white' }}>...</Text> : <Feather name="plus" size={24} color="#FFF" />}
         </TouchableOpacity>
       </KeyboardAvoidingView>
 
-      <FlatList
-        data={dataCaregoria}
-        keyExtractor={(item) => item.id != null ? item.id.toString() : item.titulo}
-        contentContainerStyle={styles.listContainer}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={()=> router.back() } style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
-            <Text style={styles.categoriaText}>{item.titulo} - R$ {(item.valor ?? 0).toFixed(2)}</Text>
-            <TouchableOpacity onPress={()=> confirmarExclusao(item.id)} style={{backgroundColor: "red", width: 30, height: 30, alignItems: "center", justifyContent: "center", borderRadius: 10}}>
-              <Feather name="trash-2" size={20} color={"white"}/>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-      />
-
-      <Modal visible={pickerVisible} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.colorPickerContainer}>
-            {coresDisponiveis.map((cor) => (
-              <TouchableOpacity
-                key={cor}
-                style={[
-                  styles.colorCircle,
-                  { backgroundColor: cor },
-                  cor === novaCor ? styles.colorCircleSelected : null,
-                ]}
-                onPress={() => {
-                  setNovaCor(cor);
-                  setPickerVisible(false);
-                }}
+      {dataCaregoriaOrdenada.length === 0 ? (
+              <Text style={styles.emptyText}>Nenhuma Categoria cadastrada</Text>
+            ) : (
+              <FlatList
+                data={dataCaregoriaOrdenada}
+                keyExtractor={(item) => item.id != null ? item.id.toString() : item.titulo}
+                contentContainerStyle={styles.listContainer}
+                renderItem={({ item }) => (
+                  <TouchableOpacity onPress={() => {
+                      router.push({
+                        pathname: '/(tabs)',
+                        params: { id: item.id.toString(), titulo: item.titulo, cor: item.cor }
+                      });
+                    }} style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
+                    <Text style={styles.categoriaText}>{item.titulo} - R$ {(item.valor ?? 0).toFixed(2)}</Text>
+                    <TouchableOpacity onPress={()=> confirmarExclusao(item.id)} style={{backgroundColor: "red", width: 30, height: 30, alignItems: "center", justifyContent: "center", borderRadius: 10}}>
+                      <Feather name="trash-2" size={20} color={"white"}/>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
               />
-            ))}
-          </View>
+            )    
+      }
 
-          <TouchableOpacity
-            style={styles.fecharModal}
-            onPress={() => setPickerVisible(false)}
-          >
-            <Text style={styles.fecharTexto}>Fechar</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+      
     </View>
   );
 }
@@ -180,6 +174,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F2F2',
+    gap: 10,
+
   },
   header: {
     flexDirection: 'row',
@@ -198,6 +194,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     padding: 16,
+    
   },
   input: {
     height: 48,
@@ -252,12 +249,11 @@ const styles = StyleSheet.create({
   },
   colorPickerContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     backgroundColor: '#FFF',
-    padding: 20,
+    padding: 9,
     borderRadius: 12,
     justifyContent: 'center',
-    maxWidth: 320,
+    maxWidth: '100%',
   },
   colorCircle: {
     width: 40,
@@ -283,5 +279,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#7C4DFF',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 50,
+    fontSize: 16,
+    color: '#999',
   },
 });

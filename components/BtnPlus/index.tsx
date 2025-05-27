@@ -75,11 +75,12 @@ export default function BtnPlus() {
       if(tipo === 'saida'){
         dispatch(setDataCategoria(newDataCategoria));
       }
+      
       dispatch({ type: 'receitas/setReceitas', payload: newReceita });
       dispatch({ type: 'despesas/setDespesas', payload: newDespesas });
 
       setModalVisible(false);
-      setTipo('entrada');
+      setTipo('saida');
       setValor('');
       setCategoria(null);
 
@@ -90,7 +91,7 @@ export default function BtnPlus() {
   };
 
   function nextScream(){
-    router.push('/categorias') 
+    router.push('/(tabs)/categorias') 
     setModalVisible(false)
   }
 

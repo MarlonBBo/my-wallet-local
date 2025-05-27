@@ -1,6 +1,8 @@
-import { useFocusEffect } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { TransactionProps, useTransactionDatabase } from '../../database/useTransactionDatabase';
 
 export default function Transaction() {
@@ -25,13 +27,23 @@ export default function Transaction() {
 
   return (
     <View style={styles.container}>
-      {transactions.length === 0 ? (
+      <StatusBar style="light" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Feather name="arrow-left" size={30} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Transações</Text>
+      </View>
+
+      <View>
+        {transactions.length === 0 ? (
         <Text style={styles.emptyText}>Nenhuma transação cadastrada</Text>
       ) : (
         <FlatList
           data={transactions}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ paddingBottom: 30 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           renderItem={({ item }) => (
             <View
               style={[
@@ -47,7 +59,7 @@ export default function Transaction() {
             >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View>
-                  <Text style={styles.category}>{item.category?.titulo}</Text>
+                  <Text style={styles.category}>{item.type === 'entrada' ? ('Entrada') : (item.category?.titulo)}</Text>
                   <Text style={[styles.date]}>
                     {new Date(item.date).toLocaleDateString()}
                   </Text>
@@ -65,6 +77,8 @@ export default function Transaction() {
           )}
         />
       )}
+      </View>
+
     </View>
   );
 }
@@ -72,14 +86,19 @@ export default function Transaction() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F2F2F2',
+    gap: 10
+  },
+  content:{
+    flex: 1,
     paddingTop: 50,
     paddingHorizontal: 16,
     backgroundColor: '#F9F9F9',
   },
   transactionItem: {
+    
     padding: 15,
     borderRadius: 10,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -104,5 +123,20 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 16,
     color: '#999',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 30,
+    padding: 16,
+    backgroundColor: '#7C4DFF',
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFF',
   },
 });

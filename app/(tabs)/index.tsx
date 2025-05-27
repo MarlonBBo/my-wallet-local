@@ -3,7 +3,6 @@ import { useTransactionDatabase } from '@/database/useTransactionDatabase';
 import { RootState } from '@/store'; // ajuste conforme o caminho do seu store
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from "react";
 import { InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -16,13 +15,13 @@ export default function Home() {
 
 const transactionDatabase = useTransactionDatabase();
 
-const { id, titulo, cor} = useLocalSearchParams<{ id: string, titulo: string, cor: string, abrir: string }>();
+// const { id, titulo, cor} = useLocalSearchParams<{ id: string, titulo: string, cor: string, abrir: string }>();
 
-const categoriaSelecionada = {
-    id,
-    titulo,
-    cor,
-  };
+// const categoriaSelecionada = {
+//     id,
+//     titulo,
+//     cor,
+//   };
 
 const dispatch = useDispatch();
 
@@ -66,6 +65,7 @@ const [ready, setReady] = React.useState(false);
     dispatch({ type: 'receitas/setReceitas', payload: 0 });
     dispatch({ type: 'despesas/setDespesas', payload: 0 });
     dispatch({ type: 'dataCategoria/setDataCategoria', payload: []});
+    console.log("teste: ", dataCaregoria, " - ", outrasSoma, " - ", categoriasFinal, " - ", categoriasComValor, " - ", dataGrafico);
   }
 
     const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
@@ -189,7 +189,7 @@ const [ready, setReady] = React.useState(false);
 
 
 
-       <BtnPlus categoriaSelecionada={categoriaSelecionada}/>
+       <BtnPlus />
     </View>
   );
 }

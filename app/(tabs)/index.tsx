@@ -215,7 +215,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             { !viewFullPolarChart ? (
               <SafeAreaView style={styles.datas}>
               {categoriasComValor.map((item, index) => (
-                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
                   <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
                   <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo.length > 7 ? item.titulo.slice(0,7) + '.' : item.titulo} </Text>
                   <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{item.valor >= 10000 ? 'R$ ' + item.valor.toString().slice(0,2) + 'Mil' : formatarValor(item.valor)}</Text>

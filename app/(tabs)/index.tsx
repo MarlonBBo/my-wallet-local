@@ -1,14 +1,22 @@
 import BtnPlus from '@/components/BtnPlus';
 import { useTransactionDatabase } from '@/database/useTransactionDatabase';
-import { RootState } from '@/store'; // ajuste conforme o caminho do seu store
+import { RootState } from '@/store';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import React from "react";
+import { useEffect, useState } from "react";
 import { InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { Pie, PolarChart } from 'victory-native';
+
+export const formatarValor = (valor: number) => {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      }).format(valor);
+    };
 
 
 export default function Home() {
@@ -25,9 +33,11 @@ const transactionDatabase = useTransactionDatabase();
 
 const dispatch = useDispatch();
 
-const [ready, setReady] = React.useState(false);
+const [ready, setReady] = useState(false);
+const [disabledState, setDisabledState] = useState(false);
+const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
 
-  React.useEffect(() => {
+  useEffect(() => {
   const task = InteractionManager.runAfterInteractions(() => {
     const carregarSaldos = async () => {
 
@@ -71,6 +81,8 @@ const [ready, setReady] = React.useState(false);
     const topCategorias = dataCaregoriaOrdenada.slice(0, 3); 
     const outras = dataCaregoriaOrdenada.slice(3);       
 
+    const totalvalueCat = dataCaregoria.reduce((acc, item) => acc + item.valor, 0)
+
     const outrasSoma = outras.reduce((acc, item) => acc + item.valor, 0);
 
     const categoriasFinal = [...topCategorias];
@@ -84,6 +96,12 @@ const [ready, setReady] = React.useState(false);
     }
 
     const dataGrafico = categoriasFinal.map(item => ({
+      label: item.titulo,
+      value: item.valor,
+      color: item.cor,
+    }));
+
+    const dataGrafico2 = dataCaregoria.map(item => ({
       label: item.titulo,
       value: item.valor,
       color: item.cor,
@@ -113,7 +131,7 @@ const [ready, setReady] = React.useState(false);
 
         <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: 10 }}>
           <Text style={{ fontWeight: "600", fontSize: 15, color: "#696969" }}>Saldo Total</Text>
-          <Text style={{ fontWeight: "bold", fontSize: 30 }}>R${total}</Text>
+          <Text style={{ fontWeight: "bold", fontSize: 30 }}>{formatarValor(total)}</Text>
 
           <TouchableOpacity onPress={handleRemoveTransactions} style={{ width: 40, height: 30, alignItems: 'center', justifyContent: 'center', borderColor: '#696969' }}>
             <Feather name="eye" size={20} color="#A9A9A9" style={{ marginTop: 10 }} />
@@ -125,23 +143,23 @@ const [ready, setReady] = React.useState(false);
             </Text>
           ) : (
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center'}}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name='arrow-up' size={30} color={'#32CD32'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>R${Receitas}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>{formatarValor(Receitas)}</Text>
                 </View>
               </View>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginRight: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center'}}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name='arrow-down' size={30} color={'#FF3009'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>R${Despesas}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>{formatarValor(Despesas)}</Text>
                 </View>
               </View>
             </View>
@@ -151,7 +169,7 @@ const [ready, setReady] = React.useState(false);
       </SafeAreaView>
 
       <Text style={{ fontSize: 20, fontWeight: "bold", paddingVertical: 20, paddingHorizontal: 10, paddingBottom: 5, color: "#696969" }}>Despesas por categoria</Text>
-
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 80 }}>
       {
         !ready ? (
           <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
@@ -162,32 +180,86 @@ const [ready, setReady] = React.useState(false);
             Não há dados de despesas
           </Text>
         ) : (
-          <TouchableOpacity style={styles.graphContainer}>
-            <View style={{ height: 100, width: 100 }}>
-              <PolarChart
-                data={dataGrafico}
-                labelKey={"label"}
-                valueKey={"value"}
-                colorKey={"color"}
-              >
-                <Pie.Chart innerRadius={30} />
-              </PolarChart>
-            </View>
-            <SafeAreaView style={styles.datas}>
+          <TouchableOpacity 
+            onPress={()=> (serViewFullPolarChart(true), setDisabledState(true))}
+            style={[styles.graphContainer, {
+              flexDirection: viewFullPolarChart ? "column" : "row",
+              height: viewFullPolarChart ? "100%" : 200,
+            }]}
+            disabled={disabledState}>
+            {
+              !viewFullPolarChart ? (
+                <View style={{ height: 100, width: 100}}>
+                  <PolarChart
+                    data={dataGrafico}
+                    labelKey={"label"}
+                    valueKey={"value"}
+                    colorKey={"color"}
+                  >
+                    <Pie.Chart innerRadius={30} />
+                  </PolarChart>
+                </View>
+              ) : (
+                  <TouchableOpacity onPress={()=> (serViewFullPolarChart(false), setDisabledState(false))} style={{ height: 200, width: 200}}>
+                    <PolarChart
+                      data={dataGrafico2}
+                      labelKey={"label"}
+                      valueKey={"value"}
+                      colorKey={"color"}
+                    >
+                      <Pie.Chart innerRadius={50} size={180} />
+                    </PolarChart>
+                  </TouchableOpacity>
+              )
+            }
+            { !viewFullPolarChart ? (
+              <SafeAreaView style={styles.datas}>
               {categoriasComValor.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
                   <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
-                  <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo} </Text>
-                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>R${item.valor},00</Text>
+                  <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo.length > 7 ? item.titulo.slice(0,7) + '.' : item.titulo} </Text>
+                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{item.valor >= 10000 ? 'R$ ' + item.valor.toString().slice(0,2) + 'Mil' : formatarValor(item.valor)}</Text>
                 </View>
               ))}
             </SafeAreaView>
+            ) : (
+              <FlatList 
+                data={dataCaregoriaOrdenada}
+                contentContainerStyle={styles.datas}
+                keyExtractor={(item) => (item.id != null ? item.id.toString() : item.titulo)}
+                renderItem={({ item }) => (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    width: '100%', 
+                    paddingVertical: 5, 
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                      <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
+                      <Text 
+                        style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}
+                        numberOfLines={1} 
+                        ellipsizeMode="tail"
+                      >
+                        {item.titulo.length > 10 ? item.titulo.slice(0,10) + '.' : item.titulo}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, minWidth: 120, justifyContent: 'flex-end' }}>
+                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatarValor(item.valor)}</Text>
+                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{((item.valor / totalvalueCat) * 100).toFixed(1) }%</Text>
+                    </View>
+                  </View>
+                )}
+              />
+            )
+              
+            }
+            
           </TouchableOpacity>
         )
       }
-
-
-
+      </ScrollView>
        <BtnPlus />
     </View>
   );

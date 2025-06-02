@@ -3,6 +3,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { formatarValor } from '.';
 import { TransactionProps, useTransactionDatabase } from '../../database/useTransactionDatabase';
 
 export default function Transaction() {
@@ -50,7 +51,7 @@ export default function Transaction() {
                 styles.transactionItem,
                 {
                   backgroundColor:
-                    item.type === 'entrada' ? '#E0F7FA' : '#FCE4EC',
+                    item.type === 'entrada' ? '#FFF' : '#FFF',
                   borderLeftWidth: 5,
                   borderLeftColor:
                     item.type === 'entrada' ? '#00796B' : '#C2185B',
@@ -59,7 +60,7 @@ export default function Transaction() {
             >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View>
-                  <Text style={styles.category}>{item.type === 'entrada' ? ('Entrada') : (item.category?.titulo)}</Text>
+                  <Text style={[styles.category, {color: item.type === 'entrada' ? '#00796B' : '#C2185B'}]}>{item.type === 'entrada' ? ('Entrada') : (item.category?.titulo)}</Text>
                   <Text style={[styles.date]}>
                     {new Date(item.date).toLocaleDateString()}
                   </Text>
@@ -70,7 +71,7 @@ export default function Transaction() {
                     { color: item.type === 'entrada' ? '#00796B' : '#C2185B' },
                   ]}
                 >
-                  {item.type === 'entrada' ? '+' : '-'} R$ {item.value.toFixed(2)}
+                  {item.type === 'entrada' ? '+' : '-'} {formatarValor(item.value)}
                 </Text>
               </View>
             </View>

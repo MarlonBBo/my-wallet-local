@@ -190,7 +190,8 @@ export default function BtnPlus() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
+    position: "static"
   },
   activeText: {
     color: "#FFF"

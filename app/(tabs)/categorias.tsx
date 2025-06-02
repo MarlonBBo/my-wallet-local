@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
+import { formatarValor } from ".";
 
 export default function Categorias() {
 
@@ -149,17 +150,12 @@ const deleteCategoria = async (id: number) => {
                 keyExtractor={(item) => item.id != null ? item.id.toString() : item.titulo}
                 contentContainerStyle={styles.listContainer}
                 renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => {
-                      router.push({
-                        pathname: '/(tabs)',
-                        params: { id: item.id.toString(), titulo: item.titulo, cor: item.cor }
-                      });
-                    }} style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
-                    <Text style={styles.categoriaText}>{item.titulo} - R$ {(item.valor ?? 0).toFixed(2)}</Text>
+                  <View style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
+                    <Text style={styles.categoriaText}>{item.titulo} - {formatarValor(item.valor)}</Text>
                     <TouchableOpacity onPress={()=> confirmarExclusao(item.id)} style={{backgroundColor: "red", width: 30, height: 30, alignItems: "center", justifyContent: "center", borderRadius: 10}}>
                       <Feather name="trash-2" size={20} color={"white"}/>
                     </TouchableOpacity>
-                  </TouchableOpacity>
+                  </View>
                 )}
               />
             )    

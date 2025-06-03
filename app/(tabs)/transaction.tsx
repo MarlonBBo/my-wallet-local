@@ -1,14 +1,17 @@
+import { RootState } from '@/store';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSelector } from 'react-redux';
 import { formatarValor } from '.';
 import { TransactionProps, useTransactionDatabase } from '../../database/useTransactionDatabase';
 
 export default function Transaction() {
   const [transactions, setTransactions] = useState<TransactionProps[]>([]);
 
+  const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
   const transactionDatabase = useTransactionDatabase();
 
   useFocusEffect(
@@ -71,7 +74,7 @@ export default function Transaction() {
                     { color: item.type === 'entrada' ? '#00796B' : '#C2185B' },
                   ]}
                 >
-                  {item.type === 'entrada' ? '+' : '-'} {formatarValor(item.value)}
+                   {mostrarValores ? item.type === 'entrada' ? '+' : '-' : ''} {mostrarValores ? formatarValor(item.value) : '*****'}
                 </Text>
               </View>
             </View>

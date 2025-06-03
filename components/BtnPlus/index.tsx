@@ -2,10 +2,10 @@ import { CategoriaProps, useTransactionDatabase } from '@/database/useTransactio
 import { setDataCategoria } from '@/store/dataCategoriaSlice';
 import { setTotal } from '@/store/totalSlice';
 import { AntDesign, Feather } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
 import { useDispatch } from 'react-redux';
 
 
@@ -14,7 +14,6 @@ export default function BtnPlus() {
 
   const router = useRouter();
 
-
   const transactionDatabase = useTransactionDatabase();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,8 +21,17 @@ export default function BtnPlus() {
   const [valor, setValor] = useState('');
   const [categorias, setCategorias] = useState<CategoriaProps[]>([]);
   const [categoria, setCategoria] = useState<CategoriaProps | null>(null);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(categoria?.id || null);
+  const [items, setItems] = useState(
+    categorias.map((cat) => ({ label: cat.titulo, value: cat.id }))
+  );
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+  setItems(categorias.map((cat) => ({ label: cat.titulo, value: cat.id })));
+}, [categorias]);
 
   useEffect(() => {
 
@@ -144,21 +152,26 @@ export default function BtnPlus() {
             />
 
             {tipo === 'saida' && (
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={categoria?.id || ''}
-                  onValueChange={(itemValue) => {
-                    const selected = categorias.find(cat => cat.id === itemValue);
-                    if (selected) setCategoria(selected);
-                  }}
-                  style={{ width: '100%' }}
-                >
-                  
-                    <Picker.Item style={{color: 'black'}} label="Selecione uma categoria" value="" />
-                  {categorias.map((cat) => (
-                    <Picker.Item style={{color: 'black'}} key={cat.id} label={cat.titulo} value={cat.id} />
-                  ))}
-                </Picker>
+              <View style={{width: '100%', zIndex: 1000 }}>
+                <DropDownPicker
+                open={open}
+                value={value}
+                items={items}
+                setOpen={setOpen}
+                setValue={(callback) => {
+                  const val = callback(value);
+                  setValue(val);
+                  const selected = categorias.find(cat => cat.id === val);
+                  if (selected) setCategoria(selected);
+                }}
+                setItems={setItems}
+                placeholder="Selecione uma categoria"
+                style={styles.dropDown}
+                dropDownContainerStyle={styles.dropDownContainer}
+                textStyle={styles.dropDownText}
+                placeholderStyle={{ color: '#999' }}
+                listMode="SCROLLVIEW"
+              />
               </View>
             )}
 
@@ -271,14 +284,6 @@ const styles = StyleSheet.create({
     borderColor: "#696969",
     paddingLeft: 20,
   },
-  pickerContainer: {
-    width: '100%',
-    height: 45,
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: '#696969',
-    borderRadius: 10,
-  },
   addButton: {
     backgroundColor: '#7C4DFF',
     padding: 10,
@@ -286,4 +291,24 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
+  dropDown: {
+  borderColor: '#696969',
+  borderRadius: 10,
+  backgroundColor: '#FFF',
+  height: 45,
+  paddingHorizontal: 10,
+  zIndex: 1000, 
+},
+
+dropDownContainer: {
+  borderColor: '#696969',
+  borderRadius: 10,
+  backgroundColor: '#FFF',
+  zIndex: 1000,
+},
+
+dropDownText: {
+  color: '#000',
+  fontSize: 14,
+},
 });

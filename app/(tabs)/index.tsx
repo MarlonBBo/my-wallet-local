@@ -1,6 +1,7 @@
 import BtnPlus from '@/components/BtnPlus';
 import { useTransactionDatabase } from '@/database/useTransactionDatabase';
 import { RootState } from '@/store';
+import { toggleVisibilidade } from '@/store/visibilidadeSlice';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
@@ -66,6 +67,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
   const Receitas = useSelector((state: RootState) => state.receitas.value);
   const Despesas = useSelector((state: RootState) => state.despesas.value);
   const dataCaregoria = useSelector((state: RootState) => state.dataCategoria.lista);
+  const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
 
 
   function handleRemoveTransactions() {
@@ -111,7 +113,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="auto" />
       <SafeAreaView style={styles.header}>
         <View style={styles.status}>
           <Text style={styles.side}>Home</Text>
@@ -121,27 +123,29 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             <Text style={styles.title}>Maio</Text>
             <Feather name='chevron-right' size={20} color={'black'} />
           </View>
-
+          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true}>
           <Image
             style={styles.avatar}
             source={require('../../assets/images/pf.png')}
             contentFit="cover"
           />
+          </TouchableOpacity>
         </View>
 
         <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: 10 }}>
           <Text style={{ fontWeight: "600", fontSize: 15, color: "#696969" }}>Saldo Total</Text>
-          <Text style={{ fontWeight: "bold", fontSize: 30 }}>{formatarValor(total)}</Text>
+          <Text style={{ fontWeight: "bold", fontSize: 30 }}>{mostrarValores ? formatarValor(total) : '*****'}</Text>
 
-          <TouchableOpacity onPress={handleRemoveTransactions} style={{ width: 40, height: 30, alignItems: 'center', justifyContent: 'center', borderColor: '#696969' }}>
-            <Feather name="eye" size={20} color="#A9A9A9" style={{ marginTop: 10 }} />
+          <TouchableOpacity onPress={() => dispatch(toggleVisibilidade())} style={{ width: 40, height: 30, alignItems: 'center', justifyContent: 'center', borderColor: '#696969' }}>
+            { mostrarValores ? ( 
+              <Feather name="eye-off" size={20} color="#A9A9A9" style={{ marginTop: 10 }} />
+            ) : ( 
+              <Feather name="eye" size={20} color="#A9A9A9" style={{ marginTop: 10 }} />
+            ) 
+            } 
           </TouchableOpacity>
 
-          {Receitas === 0 && Despesas === 0 ? (
-            <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
-              Nenhuma movimentação registrada no período.
-            </Text>
-          ) : (
+          
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center'}}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
@@ -149,21 +153,21 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>{formatarValor(Receitas)}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
                 </View>
               </View>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center'}}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name='arrow-down' size={30} color={'#FF3009'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>{formatarValor(Despesas)}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>{mostrarValores ? formatarValor(Despesas): '*****'}</Text>
                 </View>
               </View>
             </View>
-          )}
+          
 
         </View>
       </SafeAreaView>
@@ -176,9 +180,16 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             Carregando...
           </Text>
         ) : !(categoriasComValor.length > 0) ? (
-          <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
-            Não há dados de despesas
-          </Text>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 35 }}>
+            <Image
+              style={{ width: 200, height: 200, alignSelf: 'center' }}
+              source={require('../../assets/images/wallet-vazia.png')}
+              contentFit="cover"
+            />
+            <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9', marginTop: 20 }}>
+              Não há dados de despesas
+            </Text>
+          </View>
         ) : (
           <TouchableOpacity 
             onPress={()=> (serViewFullPolarChart(true), setDisabledState(true))}
@@ -215,10 +226,10 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             { !viewFullPolarChart ? (
               <SafeAreaView style={styles.datas}>
               {categoriasComValor.map((item, index) => (
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
+                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
                   <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
                   <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo.length > 7 ? item.titulo.slice(0,7) + '.' : item.titulo} </Text>
-                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{item.valor >= 10000 ? 'R$ ' + item.valor.toString().slice(0,2) + 'Mil' : formatarValor(item.valor)}</Text>
+                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{mostrarValores ? item.valor >= 10000 ? 'R$ ' + item.valor.toString().slice(0,2) + 'Mil' : formatarValor(item.valor) : '*****'}</Text>
                 </View>
               ))}
             </SafeAreaView>
@@ -246,7 +257,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
                       </Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, minWidth: 120, justifyContent: 'flex-end' }}>
-                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{formatarValor(item.valor)}</Text>
+                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{mostrarValores ? formatarValor(item.valor) : '*****'}</Text>
                       <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{((item.valor / totalvalueCat) * 100).toFixed(1) }%</Text>
                     </View>
                   </View>

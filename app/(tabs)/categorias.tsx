@@ -13,6 +13,8 @@ import { formatarValor } from ".";
 export default function Categorias() {
 
   const transactionDatabase = useTransactionDatabase();
+  const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
+
 
   const router = useRouter();
 
@@ -124,6 +126,7 @@ const deleteCategoria = async (id: number) => {
             <FlatList
               data={coresDisponiveis}
               keyExtractor={(item) => item}
+              showsHorizontalScrollIndicator={false}
               horizontal
               renderItem={({ item: cor }) => (
                 <TouchableOpacity
@@ -149,9 +152,10 @@ const deleteCategoria = async (id: number) => {
                 data={dataCaregoriaOrdenada}
                 keyExtractor={(item) => item.id != null ? item.id.toString() : item.titulo}
                 contentContainerStyle={styles.listContainer}
+                showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => (
                   <View style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
-                    <Text style={styles.categoriaText}>{item.titulo} - {formatarValor(item.valor)}</Text>
+                    <Text style={styles.categoriaText}>{item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}</Text>
                     <TouchableOpacity onPress={()=> confirmarExclusao(item.id)} style={{backgroundColor: "red", width: 30, height: 30, alignItems: "center", justifyContent: "center", borderRadius: 10}}>
                       <Feather name="trash-2" size={20} color={"white"}/>
                     </TouchableOpacity>

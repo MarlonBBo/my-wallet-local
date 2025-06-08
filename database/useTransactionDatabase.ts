@@ -74,7 +74,18 @@ const QUERIES = {
   GET_CATEGORIAS_SUM: "SELECT titulo, cor, valor FROM categorias",
   GET_ALL_CATEGORIAS: "SELECT * FROM categorias ORDER BY titulo ASC",
   DELETE_CATEGORIA_BY_ID: "DELETE FROM categorias WHERE id = ?",
-  DELETE_ALL_CATEGORY: "DELETE FROM categorias"
+  DELETE_ALL_CATEGORY: "DELETE FROM categorias",
+  UPDATE_CATEGORIA: `
+    UPDATE categorias 
+    SET titulo = ?, cor = ?
+    WHERE id = ?
+  `,
+  DELETE_TRANSACTION_BY_ID: "DELETE FROM transactions WHERE id = ?",
+  UPDATE_TRANSACTION_BY_ID: `
+    UPDATE transactions
+    SET category_id = ?, type = ?, value = ?, date = ?
+    WHERE id = ?
+  `,
 
 };
 
@@ -137,6 +148,19 @@ export function useTransactionDatabase() {
       
     } catch (error) {
       throw error
+    }
+  }
+
+  const UpdateCategoria = async (id: number, data: CreateCategoriaDTO) => {
+    try {
+      await db.runAsync(QUERIES.UPDATE_CATEGORIA, [
+        data.titulo,
+        data.cor,
+        id
+      ]);
+    } catch (error) {
+      console.error("Erro ao atualizar categoria:", error);
+      throw error;
     }
   }
 
@@ -214,6 +238,51 @@ export function useTransactionDatabase() {
     }
   };
 
+  const DeleteTransaction = async (id: number) => {
+  try {
+    await db.withTransactionAsync(async () => {
+
+      const transacao = await db.getFirstAsync<{
+        value: number;
+        type: 'entrada' | 'saida';
+        category_id: number;
+      }>(`SELECT value, type, category_id FROM transactions WHERE id = ?`, [id]);
+
+      if (!transacao) {
+        throw new Error("Transação não encontrada");
+      }
+
+      if (transacao.type === 'saida' && transacao.category_id) {
+        await db.runAsync(
+          `UPDATE categorias SET valor = valor - ? WHERE id = ?`,
+          [transacao.value, transacao.category_id]
+        );
+      }
+
+      await db.runAsync(QUERIES.DELETE_TRANSACTION_BY_ID, [id]);
+    });
+  } catch (error) {
+    console.error("Erro ao excluir transação:", error);
+    throw error;
+  }
+};
+
+
+  const UpdateTransaction = async (id: number, data: CreateTransactionDTO) => {
+    try {
+      await db.runAsync(QUERIES.UPDATE_TRANSACTION_BY_ID, [
+        data.category.id,
+        data.type,
+        data.value,
+        data.date,
+        id
+      ]);
+    } catch (error) {
+      console.error("Erro ao atualizar transação:", error);
+      throw error;
+    }
+  };
+
 
   // Totais e resumos
   const GetTotalValue = useCallback(async (): Promise<number> => {
@@ -284,5 +353,8 @@ export function useTransactionDatabase() {
     DeleteAllTransactions,
     DeleteCategoriaById,
     DeleteAllCategoria,
+    UpdateTransaction,
+    DeleteTransaction,
+    UpdateCategoria
   };
 }

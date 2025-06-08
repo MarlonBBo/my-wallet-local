@@ -4,8 +4,9 @@ import { RootState } from '@/store';
 import { toggleVisibilidade } from '@/store/visibilidadeSlice';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,30 +39,31 @@ const [ready, setReady] = useState(false);
 const [disabledState, setDisabledState] = useState(false);
 const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
 
-  useEffect(() => {
-  const task = InteractionManager.runAfterInteractions(() => {
-    const carregarSaldos = async () => {
+  useFocusEffect(
+  useCallback(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      const carregarSaldos = async () => {
+        const newDataCategoria = await transactionDatabase.GetSomaPorCategoria();
+        dispatch({ type: 'dataCategoria/setDataCategoria', payload: newDataCategoria });
 
-      const newDataCategoria = await transactionDatabase.GetSomaPorCategoria();
-      dispatch({ type: 'dataCategoria/setDataCategoria', payload: newDataCategoria });
+        const newTotal = await transactionDatabase.GetTotalValue();
+        dispatch({ type: 'total/setTotal', payload: newTotal });
 
-      const newTotal = await transactionDatabase.GetTotalValue();
-      dispatch({ type: 'total/setTotal', payload: newTotal });
+        const newTotalReceitas = await transactionDatabase.GetReceitas();
+        dispatch({ type: 'receitas/setReceitas', payload: newTotalReceitas });
 
-      const newTotalReceitas = await transactionDatabase.GetReceitas();
-      dispatch({ type: 'receitas/setReceitas', payload: newTotalReceitas });
+        const newTotalDespesas = await transactionDatabase.GetDespesas();
+        dispatch({ type: 'despesas/setDespesas', payload: newTotalDespesas });
 
-      const newTotalDespesas = await transactionDatabase.GetDespesas();
-      dispatch({ type: 'despesas/setDespesas', payload: newTotalDespesas });
+        setReady(true);
+      };
 
-      setReady(true);
-    };
+      carregarSaldos();
+    });
 
-    carregarSaldos();
-  });
-
-  return () => task.cancel();
-}, []);
+    return () => task.cancel();
+  }, [])
+);
 
   const total = useSelector((state: RootState) => state.total.value);
   const Receitas = useSelector((state: RootState) => state.receitas.value);
@@ -113,7 +115,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
 
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
+      <StatusBar style="light"/>
       <SafeAreaView style={styles.header}>
         <View style={styles.status}>
           <Text style={styles.side}>Home</Text>
@@ -123,7 +125,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             <Text style={styles.title}>Maio</Text>
             <Feather name='chevron-right' size={20} color={'black'} />
           </View>
-          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true}>
+          <TouchableOpacity onPress={handleRemoveTransactions} disabled={false}>
           <Image
             style={styles.avatar}
             source={require('../../assets/images/pf.png')}
@@ -317,8 +319,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontSize: 20,
     textDecorationColor: '#000',
-    textDecorationLine: 'underline',
-    color: '#000',
+    textDecorationLine: 'line-through',
+    color: '#000'
   },
   avatar: {
     width: 50,

@@ -1,33 +1,40 @@
+import { BtnDeleteTransaction } from '@/components/BtnDeleteTransaction';
 import { RootState } from '@/store';
+import { setTransactions } from '@/store/transactionSlice';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSelector } from 'react-redux';
+import { Swipeable } from 'react-native-gesture-handler';
+import { useDispatch, useSelector } from 'react-redux';
 import { formatarValor } from '.';
-import { TransactionProps, useTransactionDatabase } from '../../database/useTransactionDatabase';
+import { useTransactionDatabase } from '../../database/useTransactionDatabase';
 
 export default function Transaction() {
-  const [transactions, setTransactions] = useState<TransactionProps[]>([]);
+
+  const dispatch = useDispatch();
 
   const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
   const transactionDatabase = useTransactionDatabase();
 
-  useFocusEffect(
+  const swipeableRefs = useRef<{ [key: number]: Swipeable | null }>({});
+
+  const abrirAcoes = (id: number) => {
+    swipeableRefs.current[id]?.openRight?.();
+  };
+
+    useFocusEffect(
     useCallback(() => {
       async function fetchTransactions() {
-        try {
-          const result = await transactionDatabase.GetTransactions();
-          setTransactions(result);
-        } catch (error) {
-          console.error("Error fetching transactions:", error);
-        }
+        const result = await transactionDatabase.GetTransactions();
+        dispatch({type: setTransactions.type, payload: result});
       }
-
       fetchTransactions();
     }, [])
   );
+
+  const transactions = useSelector((state: RootState) => state.transactions.transactions);
 
   return (
     <View style={styles.container}>
@@ -49,22 +56,45 @@ export default function Transaction() {
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           renderItem={({ item }) => (
-            <View
+          <Swipeable
+            ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
+            renderRightActions={() => (
+              <BtnDeleteTransaction transactionId={item.id} />
+            )}
+            overshootRight={false}
+          >
+            <TouchableOpacity
+              onPress={() => {
+                abrirAcoes(item.id);
+              }}
+              activeOpacity={10}
               style={[
                 styles.transactionItem,
                 {
-                  backgroundColor:
-                    item.type === 'entrada' ? '#FFF' : '#FFF',
+                  backgroundColor: '#FFF',
                   borderLeftWidth: 5,
                   borderLeftColor:
                     item.type === 'entrada' ? '#00796B' : '#C2185B',
                 },
               ]}
             >
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
                 <View>
-                  <Text style={[styles.category, {color: item.type === 'entrada' ? '#00796B' : '#C2185B'}]}>{item.type === 'entrada' ? ('Entrada') : (item.category?.titulo)}</Text>
-                  <Text style={[styles.date]}>
+                  <Text
+                    style={[
+                      styles.category,
+                      { color: item.type === 'entrada' ? '#00796B' : '#C2185B' },
+                    ]}
+                  >
+                    {item.type === 'entrada' ? 'Entrada' : item.category?.titulo}
+                  </Text>
+                  <Text style={styles.date}>
                     {new Date(item.date).toLocaleDateString()}
                   </Text>
                 </View>
@@ -74,14 +104,20 @@ export default function Transaction() {
                     { color: item.type === 'entrada' ? '#00796B' : '#C2185B' },
                   ]}
                 >
-                   {mostrarValores ? item.type === 'entrada' ? '+' : '-' : ''} {mostrarValores ? formatarValor(item.value) : '*****'}
+                  {mostrarValores
+                    ? item.type === 'entrada'
+                      ? '+'
+                      : '-'
+                    : ''}{' '}
+                  {mostrarValores ? formatarValor(item.value) : '****'}
                 </Text>
               </View>
-            </View>
-          )}
-        />
-      )}
-      </View>
+            </TouchableOpacity>
+          </Swipeable>
+        )}
+      />
+    )}
+    </View>
 
     </View>
   );
@@ -104,10 +140,11 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 0,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    marginBottom: 10,
+    elevation: 5,
   },
   category: {
     fontSize: 16,

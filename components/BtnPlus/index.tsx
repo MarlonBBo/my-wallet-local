@@ -142,7 +142,8 @@ export default function BtnPlus() {
               </TouchableOpacity>
             </View>
 
-            <TextInput 
+            {tipo === 'entrada' &&(
+              <TextInput 
               style={styles.input} 
               placeholder="Digite o valor" 
               placeholderTextColor={"#000"}
@@ -150,8 +151,10 @@ export default function BtnPlus() {
               onChangeText={(text) => setValor(text)} 
               value={valor} 
             />
+            )}
 
             {tipo === 'saida' && (
+              <View style={{ width: '100%', gap: 15 }}>
               <View style={{width: '100%', zIndex: 1000 }}>
                 <DropDownPicker
                 open={open}
@@ -172,6 +175,16 @@ export default function BtnPlus() {
                 placeholderStyle={{ color: '#999' }}
                 listMode="SCROLLVIEW"
               />
+              </View>
+                <View>
+                  <TextInput 
+                  style={styles.input} 
+                  placeholder="Digite o valor" 
+                  placeholderTextColor={"#000"}
+                  keyboardType='decimal-pad' 
+                  onChangeText={(text) => setValor(text)} 
+                  value={valor}/>
+                </View>
               </View>
             )}
 

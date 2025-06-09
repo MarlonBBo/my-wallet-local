@@ -13,25 +13,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { Pie, PolarChart } from 'victory-native';
 
-export const formatarValor = (valor: number) => {
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-      }).format(valor);
-    };
+export function formatarValor(valorEmCentavos: number): string {
+  const valorEmReais = valorEmCentavos / 100;
+  return valorEmReais.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+}
 
 
 export default function Home() {
 
 const transactionDatabase = useTransactionDatabase();
 
-// const { id, titulo, cor} = useLocalSearchParams<{ id: string, titulo: string, cor: string, abrir: string }>();
-
-// const categoriaSelecionada = {
-//     id,
-//     titulo,
-//     cor,
-//   };
 
 const dispatch = useDispatch();
 
@@ -125,7 +119,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             <Text style={styles.title}>Maio</Text>
             <Feather name='chevron-right' size={20} color={'black'} />
           </View>
-          <TouchableOpacity onPress={handleRemoveTransactions} disabled={false}>
+          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true}>
           <Image
             style={styles.avatar}
             source={require('../../assets/images/pf.png')}
@@ -231,7 +225,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
                   <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
                   <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo.length > 7 ? item.titulo.slice(0,7) + '.' : item.titulo} </Text>
-                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{mostrarValores ? item.valor >= 10000 ? 'R$ ' + item.valor.toString().slice(0,2) + 'Mil' : formatarValor(item.valor) : '*****'}</Text>
+                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{mostrarValores ? formatarValor(item.valor) : '*****'}</Text>
                 </View>
               ))}
             </SafeAreaView>

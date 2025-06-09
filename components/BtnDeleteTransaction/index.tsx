@@ -43,7 +43,7 @@ export function BtnDeleteTransaction({ transactionId }: { transactionId: number 
     <TouchableOpacity onPress={handleDeleteTransaction}
       style={{
         width: 50,
-        height: '87%',
+        height: '88%',
         backgroundColor: '#C2185B',
         justifyContent: 'center',
         alignItems: 'center',

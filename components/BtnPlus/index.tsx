@@ -1,3 +1,4 @@
+import { formatarValor } from '@/app/(tabs)';
 import { CategoriaProps, useTransactionDatabase } from '@/database/useTransactionDatabase';
 import { setDataCategoria } from '@/store/dataCategoriaSlice';
 import { setTotal } from '@/store/totalSlice';
@@ -20,6 +21,7 @@ export default function BtnPlus() {
   const [tipo, setTipo] = useState<'entrada' | 'saida'>('entrada');
   const [valor, setValor] = useState('');
   const [categorias, setCategorias] = useState<CategoriaProps[]>([]);
+  const [valorCentavos, setValorCentavos] = useState(0);
   const [categoria, setCategoria] = useState<CategoriaProps | null>(null);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(categoria?.id || null);
@@ -28,6 +30,12 @@ export default function BtnPlus() {
   );
 
   const dispatch = useDispatch();
+
+  const handleChange = (text: string) => {
+    const numeros = text.replace(/\D/g, ''); 
+    const numeroComoInt = parseInt(numeros || '0', 10);
+    setValorCentavos(numeroComoInt);
+  };
 
   useEffect(() => {
   setItems(categorias.map((cat) => ({ label: cat.titulo, value: cat.id })));
@@ -46,11 +54,11 @@ export default function BtnPlus() {
 }, [modalVisible]);
 
   const handleAddTransaction = async () => {
-    if (tipo === 'saida' && (!categoria || valor === '')) {
+    if (tipo === 'saida' && (!categoria || valorCentavos === 0)) {
       alert('Preencha todos os campos');
       return;
     }
-    if (tipo === 'entrada' && valor === '') {
+    if (tipo === 'entrada' && valorCentavos === 0) {
       alert('Preencha o valor');
       return;
     }
@@ -62,9 +70,11 @@ export default function BtnPlus() {
       await transactionDatabase.CreateTransaction({
         category: tipo === 'entrada' ? entradaCategoriaPadrao : categoria!,
         type: tipo,
-        value: parseFloat(valor),
+        value: valorCentavos,
         date: new Date().toISOString(),
       });
+
+      console.log(valor, categoria, tipo, valorCentavos);
 
       const newDataCategoriaRaw = await transactionDatabase.GetSomaPorCategoria();
       const newDespesas = await transactionDatabase.GetDespesas();
@@ -145,11 +155,10 @@ export default function BtnPlus() {
             {tipo === 'entrada' &&(
               <TextInput 
               style={styles.input} 
-              placeholder="Digite o valor" 
               placeholderTextColor={"#000"}
               keyboardType='decimal-pad' 
-              onChangeText={(text) => setValor(text)} 
-              value={valor} 
+              onChangeText={handleChange} 
+              value={formatarValor(valorCentavos)} 
             />
             )}
 
@@ -179,11 +188,11 @@ export default function BtnPlus() {
                 <View>
                   <TextInput 
                   style={styles.input} 
-                  placeholder="Digite o valor" 
                   placeholderTextColor={"#000"}
                   keyboardType='decimal-pad' 
-                  onChangeText={(text) => setValor(text)} 
-                  value={valor}/>
+                  onChangeText={handleChange} 
+                  value={formatarValor(valorCentavos)} 
+                  />
                 </View>
               </View>
             )}

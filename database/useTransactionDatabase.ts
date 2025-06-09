@@ -26,9 +26,8 @@ export type CreateTransactionDTO = {
 export type CreateCategoriaDTO = {
   titulo: string;
   cor: string;
-  valor: number
+  valor: number;
 };
-
 
 const QUERIES = {
   INSERT_CATEGORIA: `
@@ -53,9 +52,10 @@ const QUERIES = {
       t.value, 
       t.date, 
       t.type, 
-      c.id as categoryId, 
-      c.titulo as categoryTitulo, 
-      c.cor as categoryCor
+      c.id as category_id, 
+      c.titulo as category_titulo, 
+      c.cor as category_cor,
+      c.valor as category_valor
     FROM transactions t
     LEFT JOIN categorias c ON t.category_id = c.id
     ORDER BY t.date DESC
@@ -85,7 +85,6 @@ const QUERIES = {
     SET category_id = ?, type = ?, value = ?, date = ?
     WHERE id = ?
   `,
-
 };
 
 export function useTransactionDatabase() {
@@ -93,28 +92,25 @@ export function useTransactionDatabase() {
 
   // Categorias
   const CreateCategoria = async (data: CreateCategoriaDTO): Promise<CategoriaProps> => {
-  try {
-    await db.runAsync(QUERIES.INSERT_CATEGORIA, [data.titulo, data.cor]);
+    try {
+      await db.runAsync(QUERIES.INSERT_CATEGORIA, [data.titulo, data.cor]);
 
-    const ultimaCategoria = await db.getFirstAsync<CategoriaProps>(
-      `SELECT * FROM categorias ORDER BY id DESC LIMIT 1`
-    );
+      const ultimaCategoria = await db.getFirstAsync<CategoriaProps>(
+        `SELECT * FROM categorias ORDER BY id DESC LIMIT 1`
+      );
 
-    if (!ultimaCategoria) throw new Error("Categoria não encontrada após inserção.");
+      if (!ultimaCategoria) throw new Error("Categoria não encontrada após inserção.");
 
-    return { ...ultimaCategoria, valor: 0 };
-  } catch (error) {
-    console.error("Erro ao criar categoria:", error);
-    throw error;
-  }
-};
-
+      return { ...ultimaCategoria, valor: 0 };
+    } catch (error) {
+      console.error("Erro ao criar categoria:", error);
+      throw error;
+    }
+  };
 
   const GetCategoriaById = async (id: number): Promise<CategoriaProps | null> => {
     try {
-      return await db.getFirstAsync<CategoriaProps>(
-        QUERIES.GET_CATEGORIA_BY_ID, [id]
-      ) ?? null;
+      return await db.getFirstAsync<CategoriaProps>(QUERIES.GET_CATEGORIA_BY_ID, [id]) ?? null;
     } catch (error) {
       console.error("Erro ao buscar categoria:", error);
       return null;
@@ -122,93 +118,72 @@ export function useTransactionDatabase() {
   };
 
   const GetAllCategorias = async (): Promise<CategoriaProps[]> => {
-    console.trace("GetAllCategorias foi chamado");
-  try {
-    if (!db) {
-      console.warn('DB não está pronto ainda');
+    try {
+      return await db.getAllAsync<CategoriaProps>(QUERIES.GET_ALL_CATEGORIAS);
+    } catch (error) {
+      console.error("Erro ao buscar categorias:", error);
       return [];
     }
-
-    const data = await db.getAllAsync<CategoriaProps>(QUERIES.GET_ALL_CATEGORIAS);
-    console.log('Categorias encontradas:', data);
-    return data;
-  } catch (error) {
-    console.error("Erro ao buscar categorias:", error);
-    return [];
-  }
-};
-
+  };
 
   const DeleteCategoriaById = async (id: number) => {
     try {
-
-      return await db.runAsync(QUERIES.DELETE_CATEGORIA_BY_ID, [id])
-      
+      return await db.runAsync(QUERIES.DELETE_CATEGORIA_BY_ID, [id]);
     } catch (error) {
-      throw error
+      throw error;
     }
-  }
+  };
 
   const UpdateCategoria = async (id: number, data: CreateCategoriaDTO) => {
     try {
-      await db.runAsync(QUERIES.UPDATE_CATEGORIA, [
-        data.titulo,
-        data.cor,
-        id
-      ]);
+      await db.runAsync(QUERIES.UPDATE_CATEGORIA, [data.titulo, data.cor, id]);
     } catch (error) {
       console.error("Erro ao atualizar categoria:", error);
       throw error;
     }
-  }
+  };
 
   const DeleteAllCategoria = async () => {
     try {
       await db.execAsync(QUERIES.DELETE_ALL_CATEGORY);
     } catch (error) {
-      throw error
+      throw error;
     }
-  }
+  };
 
   // Transações
-  async function CreateTransaction(data: CreateTransactionDTO) {
-  try {
-    await db.withTransactionAsync(async () => {
-      // 1. Insere a transação
-      await db.runAsync(
-        `INSERT INTO transactions (category_id, type, value, date) VALUES (?, ?, ?, ?)`,
-        [
-          data.category ? data.category.id : null,
-          data.type,
-          data.value,
-          data.date
-        ]
-      );
-      
-      if (data.type === 'saida') {
-        const categoriaExists = await db.getFirstAsync<{ count: number }>(
-          `SELECT COUNT(*) as count FROM categorias WHERE id = ?`,
-          [data.category.id]
+  const CreateTransaction = async (data: CreateTransactionDTO) => {
+    try {
+      await db.withTransactionAsync(async () => {
+        await db.runAsync(
+          QUERIES.INSERT_TRANSACTION,
+          [data.category.id, data.type, data.value, data.date]
         );
 
-        if (categoriaExists && categoriaExists.count > 0) {
-          await db.runAsync(
-            `UPDATE categorias SET valor = valor + ? WHERE id = ?`,
-            [data.value, data.category.id]
+        if (data.type === 'saida') {
+          const exists = await db.getFirstAsync<{ count: number }>(
+            `SELECT COUNT(*) as count FROM categorias WHERE id = ?`,
+            [data.category.id]
           );
-        } else {
-          await db.runAsync(
-            `INSERT INTO categorias (id, titulo, cor, valor) VALUES (?, ?, ?, ?)`,
-            [data.category.id, data.category.titulo, data.category.cor, data.value]
-          );
+
+          if (exists?.count) {
+            await db.runAsync(
+              `UPDATE categorias SET valor = valor + ? WHERE id = ?`,
+              [data.value, data.category.id]
+            );
+          } else {
+            await db.runAsync(
+              `INSERT INTO categorias (id, titulo, cor, valor) VALUES (?, ?, ?, ?)`,
+              [data.category.id, data.category.titulo, data.category.cor, data.value]
+            );
+          }
         }
-      }
-    });
-  } catch (error) {
-    console.error("Erro ao criar transação:", error);
-    throw error;
-  }
-}
+      });
+    } catch (error) {
+      console.error("Erro ao criar transação:", error);
+      throw error;
+    }
+  };
 
   const GetTransactions = async (): Promise<TransactionProps[]> => {
     try {
@@ -220,10 +195,10 @@ export function useTransactionDatabase() {
         date: row.date,
         type: row.type,
         category: {
-          id: row.categoryId,
-          titulo: row.categoryTitulo,
-          cor: row.categoryCor,
-          valor: 0,
+          id: row.category_id,
+          titulo: row.category_titulo,
+          cor: row.category_cor,
+          valor: row.category_valor ?? 0,
         }
       }));
     } catch (error) {
@@ -233,34 +208,30 @@ export function useTransactionDatabase() {
   };
 
   const DeleteTransaction = async (id: number) => {
-  try {
-    await db.withTransactionAsync(async () => {
+    try {
+      await db.withTransactionAsync(async () => {
+        const transacao = await db.getFirstAsync<{
+          value: number;
+          type: 'entrada' | 'saida';
+          category_id: number;
+        }>(`SELECT value, type, category_id FROM transactions WHERE id = ?`, [id]);
 
-      const transacao = await db.getFirstAsync<{
-        value: number;
-        type: 'entrada' | 'saida';
-        category_id: number;
-      }>(`SELECT value, type, category_id FROM transactions WHERE id = ?`, [id]);
+        if (!transacao) throw new Error("Transação não encontrada");
 
-      if (!transacao) {
-        throw new Error("Transação não encontrada");
-      }
+        if (transacao.type === 'saida') {
+          await db.runAsync(
+            `UPDATE categorias SET valor = valor - ? WHERE id = ?`,
+            [transacao.value, transacao.category_id]
+          );
+        }
 
-      if (transacao.type === 'saida' && transacao.category_id) {
-        await db.runAsync(
-          `UPDATE categorias SET valor = valor - ? WHERE id = ?`,
-          [transacao.value, transacao.category_id]
-        );
-      }
-
-      await db.runAsync(QUERIES.DELETE_TRANSACTION_BY_ID, [id]);
-    });
-  } catch (error) {
-    console.error("Erro ao excluir transação:", error);
-    throw error;
-  }
-};
-
+        await db.runAsync(QUERIES.DELETE_TRANSACTION_BY_ID, [id]);
+      });
+    } catch (error) {
+      console.error("Erro ao excluir transação:", error);
+      throw error;
+    }
+  };
 
   const UpdateTransaction = async (id: number, data: CreateTransactionDTO) => {
     try {
@@ -276,7 +247,6 @@ export function useTransactionDatabase() {
       throw error;
     }
   };
-
 
   // Totais e resumos
   const GetTotalValue = useCallback(async (): Promise<number> => {
@@ -320,18 +290,16 @@ export function useTransactionDatabase() {
 
   // Limpeza
   const DeleteAllTransactions = async () => {
-  try {
-    await db.withTransactionAsync(async () => {
-      await db.execAsync(QUERIES.DELETE_ALL_TRANSACTIONS);
-
-      await db.execAsync("UPDATE categorias SET valor = 0");
+    try {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(QUERIES.DELETE_ALL_TRANSACTIONS);
+        await db.execAsync("UPDATE categorias SET valor = 0");
       });
     } catch (error) {
       console.error("Erro ao limpar transações:", error);
       throw error;
     }
   };
-
 
   return {
     CreateCategoria,

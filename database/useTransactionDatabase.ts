@@ -1,7 +1,6 @@
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback } from "react";
 
-// Tipos
 export type TransactionProps = {
   id: number;
   category: CategoriaProps;
@@ -103,7 +102,6 @@ export function useTransactionDatabase() {
 
     if (!ultimaCategoria) throw new Error("Categoria não encontrada após inserção.");
 
-    // Inicializa o valor como 0 (pode ajustar se precisar)
     return { ...ultimaCategoria, valor: 0 };
   } catch (error) {
     console.error("Erro ao criar categoria:", error);
@@ -187,22 +185,18 @@ export function useTransactionDatabase() {
         ]
       );
       
-      // 2. Atualiza o valor da categoria (apenas para saídas)
       if (data.type === 'saida') {
-        // Verifica se a categoria existe
         const categoriaExists = await db.getFirstAsync<{ count: number }>(
           `SELECT COUNT(*) as count FROM categorias WHERE id = ?`,
           [data.category.id]
         );
 
         if (categoriaExists && categoriaExists.count > 0) {
-          // Atualiza a categoria existente
           await db.runAsync(
             `UPDATE categorias SET valor = valor + ? WHERE id = ?`,
             [data.value, data.category.id]
           );
         } else {
-          // Cria uma nova categoria se não existir
           await db.runAsync(
             `INSERT INTO categorias (id, titulo, cor, valor) VALUES (?, ?, ?, ?)`,
             [data.category.id, data.category.titulo, data.category.cor, data.value]
@@ -229,7 +223,7 @@ export function useTransactionDatabase() {
           id: row.categoryId,
           titulo: row.categoryTitulo,
           cor: row.categoryCor,
-          valor: 0, // Pode ser 0 ou outro valor, dependendo se você quer exibir aqui
+          valor: 0,
         }
       }));
     } catch (error) {
@@ -330,7 +324,6 @@ export function useTransactionDatabase() {
     await db.withTransactionAsync(async () => {
       await db.execAsync(QUERIES.DELETE_ALL_TRANSACTIONS);
 
-      // Resetar os valores das categorias para 0
       await db.execAsync("UPDATE categorias SET valor = 0");
       });
     } catch (error) {

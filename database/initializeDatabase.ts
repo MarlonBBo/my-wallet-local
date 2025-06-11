@@ -6,7 +6,7 @@ export async function initializeDatabase(database: SQLiteDatabase) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       titulo TEXT UNIQUE NOT NULL,
       cor TEXT NOT NULL,
-      valor REAL DEFAULT 0
+      valor INTEGER NOT NULL DEFAULT 0
     );
   `);
   
@@ -14,13 +14,14 @@ export async function initializeDatabase(database: SQLiteDatabase) {
     CREATE TABLE IF NOT EXISTS transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       category_id INTEGER NOT NULL,
-      type TEXT  NOT NULL,
-      value REAL NOT NULL,
+      type TEXT CHECK(type IN ('entrada', 'saida')) NOT NULL,
+      value INTEGER NOT NULL,
       date TEXT NOT NULL,
       FOREIGN KEY (category_id) REFERENCES categorias(id) ON DELETE CASCADE
     );
   `);
 }
+
 
 export async function resetDatabase(database: SQLiteDatabase) {
   // Deleta as tabelas (se existirem)

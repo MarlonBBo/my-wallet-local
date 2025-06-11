@@ -1,43 +1,51 @@
+import { BtnDeleteTransaction } from '@/components/BtnDeleteTransaction';
+import { RootState } from '@/store';
+import { setTransactions } from '@/store/transactionSlice';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
+import { useDispatch, useSelector } from 'react-redux';
 import { formatarValor } from '.';
-import { TransactionProps, useTransactionDatabase } from '../../database/useTransactionDatabase';
+import { useTransactionDatabase } from '../../database/useTransactionDatabase';
 
 export default function Transaction() {
-  const [transactions, setTransactions] = useState<TransactionProps[]>([]);
 
+  const dispatch = useDispatch();
+
+  const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
   const transactionDatabase = useTransactionDatabase();
 
-  useFocusEffect(
+  const swipeableRefs = useRef<{ [key: number]: Swipeable | null }>({});
+
+  const abrirAcoes = (id: number) => {
+    swipeableRefs.current[id]?.openRight?.();
+  };
+
+    useFocusEffect(
     useCallback(() => {
       async function fetchTransactions() {
-        try {
-          const result = await transactionDatabase.GetTransactions();
-          setTransactions(result);
-        } catch (error) {
-          console.error("Error fetching transactions:", error);
-        }
+        const result = await transactionDatabase.GetTransactions();
+        dispatch({type: setTransactions.type, payload: result});
       }
-
       fetchTransactions();
     }, [])
   );
 
-  return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={30} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Transações</Text>
-      </View>
+  const transactions = useSelector((state: RootState) => state.transactions.transactions);
 
-      <View>
-        {transactions.length === 0 ? (
+  return (
+  <View style={styles.container}>
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Feather name="arrow-left" size={30} color="#FFF" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Transações</Text>
+    </View>
+
+    <View style={{flex: 1, paddingTop: 10, backgroundColor: '#F9F9F9'}}>
+      {transactions.length === 0 ? (
         <Text style={styles.emptyText}>Nenhuma transação cadastrada</Text>
       ) : (
         <FlatList
@@ -45,46 +53,72 @@ export default function Transaction() {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.transactionItem,
-                {
-                  backgroundColor:
-                    item.type === 'entrada' ? '#FFF' : '#FFF',
-                  borderLeftWidth: 5,
-                  borderLeftColor:
-                    item.type === 'entrada' ? '#00796B' : '#C2185B',
-                },
-              ]}
-            >
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View>
-                  <Text style={[styles.category, {color: item.type === 'entrada' ? '#00796B' : '#C2185B'}]}>{item.type === 'entrada' ? ('Entrada') : (item.category?.titulo)}</Text>
-                  <Text style={[styles.date]}>
-                    {new Date(item.date).toLocaleDateString()}
-                  </Text>
-                </View>
-                <Text
+          renderItem={({ item }) => {
+            const isEntrada = item.type === 'entrada';
+            const cor = isEntrada ? '#00796B' : '#C2185B';
+            const titulo = isEntrada ? 'Entrada' : item.category?.titulo;
+
+            return (
+              <Swipeable
+              containerStyle={{borderRadius: 10}}
+                ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
+                renderRightActions={() => (
+                  <BtnDeleteTransaction transactionId={item.id} />
+                )}
+                overshootRight={false}
+              >
+                <TouchableOpacity
+                  onPress={() => abrirAcoes(item.id)}
+                  activeOpacity={10}
                   style={[
-                    styles.amount,
-                    { color: item.type === 'entrada' ? '#00796B' : '#C2185B' },
+                    styles.transactionItem,
+                    {
+                      backgroundColor: '#FFF',
+                      borderLeftWidth: 5,
+                      borderLeftColor: cor,
+                    },
                   ]}
                 >
-                  {item.type === 'entrada' ? '+' : '-'} {formatarValor(item.value)}
-                </Text>
-              </View>
-            </View>
-          )}
+                  <View style={styles.transactionContent}>
+                    <View>
+                      <Text style={[styles.category, { color: cor }]}>
+                        {titulo}
+                      </Text>
+                      <Text style={styles.date}>
+                        {new Date(item.date).toLocaleDateString()}
+                      </Text>
+                    </View>
+
+                    <View style={styles.valueWrapper}>
+                      <Feather name="chevron-right" size={24} color="#888" />
+                      <Text style={[styles.amount, { color: cor }]}>
+                        {mostrarValores
+                          ? `${isEntrada ? '+' : '-'} ${formatarValor(item.value)}`
+                          : '****'}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Swipeable>
+            );
+          }}
         />
       )}
-      </View>
-
     </View>
-  );
+  </View>
+);
+
 }
 
 const styles = StyleSheet.create({
+    transactionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  valueWrapper: {
+    alignItems: 'flex-end',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F2F2F2',
@@ -94,17 +128,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 16,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#FFF',
   },
   transactionItem: {
-    
     padding: 15,
     borderRadius: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+    marginBottom: 10,
+    backgroundColor: '#FFF',
+    borderLeftWidth: 5,
   },
   category: {
     fontSize: 16,

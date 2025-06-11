@@ -1,28 +1,32 @@
+import { CategoriaProps } from '@/database/useTransactionDatabase';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface CategoriaData {
-  id: number;
-  titulo: string;
-  valor: number;
-  cor: string;
-}
-
 interface DataCategoriaState {
-  lista: CategoriaData[];
+  lista: CategoriaProps[];
+  oneCategoria: CategoriaProps;
 }
 
 const initialState: DataCategoriaState = {
   lista: [],
+  oneCategoria: {
+    id: 0,
+    titulo: '',
+    cor: '#000000',
+    valor: 0,
+  },
 };
 
 const dataCategoriaSlice = createSlice({
   name: 'dataCategoria',
   initialState,
   reducers: {
-    setDataCategoria(state, action: PayloadAction<CategoriaData[]>) {
+    setOneCategoria(state, action: PayloadAction<CategoriaProps>) {
+      state.oneCategoria = action.payload;
+    },
+    setDataCategoria(state, action: PayloadAction<CategoriaProps[]>) {
       state.lista = action.payload;
     },
-    addCategoria(state, action: PayloadAction<CategoriaData>) {
+    addCategoria(state, action: PayloadAction<CategoriaProps>) {
       state.lista.push(action.payload);
     },
     removeCategoria(state, action: PayloadAction<number>) {
@@ -31,5 +35,5 @@ const dataCategoriaSlice = createSlice({
   },
 });
 
-export const { setDataCategoria, addCategoria, removeCategoria } = dataCategoriaSlice.actions;
+export const { setDataCategoria, addCategoria, removeCategoria, setOneCategoria } = dataCategoriaSlice.actions;
 export default dataCategoriaSlice.reducer;

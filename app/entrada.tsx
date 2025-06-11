@@ -91,7 +91,7 @@ export default function Entrada() {
       />
 
       <TouchableOpacity 
-        style={{backgroundColor: '#7C4DFF', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 24, right: 24}}
+        style={{backgroundColor: '#004880', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 24, right: 24}}
         onPress={() => {
           handleAddTransaction();
         }}>

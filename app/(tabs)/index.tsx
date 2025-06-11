@@ -143,21 +143,21 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center'}}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-up' size={30} color={'#32CD32'} />
+                  <Feather name='arrow-up' size={30} color={'#004880'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
                 </View>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-down' size={30} color={'#FF3009'} />
+                  <Feather name='arrow-down' size={30} color={'#004880'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>{mostrarValores ? formatarValor(Despesas): '*****'}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Despesas): '*****'}</Text>
                 </View>
               </View>
             </View>
@@ -171,7 +171,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
       {
         !ready ? (
           <View style={{ marginTop: 20, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#7C4DFF" />
+            <ActivityIndicator size="large" color="#004880" />
             <Text style={{ marginTop: 10, color: '#A9A9A9', fontSize: 14 }}>Carregando...</Text>
           </View>
         )

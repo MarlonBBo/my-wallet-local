@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 30,
     padding: 16,
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#004880',
   },
   backButton: {
     marginRight: 12,

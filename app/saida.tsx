@@ -132,8 +132,8 @@ export default function Saida() {
               textStyle={styles.dropDownText}
               placeholderStyle={styles.placeholderStyle}
               listMode="SCROLLVIEW"
-              ArrowDownIconComponent={({ style }) => <Feather name="chevron-down" size={20} color="#7C4DFF" />}
-              ArrowUpIconComponent={({ style }) => <Feather name="chevron-up" size={20} color="#7C4DFF" />}
+              ArrowDownIconComponent={({ style }) => <Feather name="chevron-down" size={20} color="#004880" />}
+              ArrowUpIconComponent={({ style }) => <Feather name="chevron-up" size={20} color="#004880" />}
             />
           </View>
 
@@ -145,7 +145,7 @@ export default function Saida() {
 
       <TouchableOpacity 
         style={{
-          backgroundColor: '#7C4DFF',
+          backgroundColor: '#004880',
           width: 60,
           height: 60,
           borderRadius: 30,
@@ -231,11 +231,11 @@ addCategoria: {
   alignItems: 'center',
   borderRadius: 10,
   borderWidth: 1,
-  borderColor: '#7C4DFF',
+  borderColor: '#004880',
 },
 
 addCategoriaText: {
-  color: '#7C4DFF',
+  color: '#004880',
   fontSize: 15,
   fontWeight: "600",
 },

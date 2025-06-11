@@ -12,10 +12,10 @@ export default function Layout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <SQLiteProvider databaseName="mydatabase.db" onInit={initializeDatabase}>
-          <SafeAreaView style={{backgroundColor: "#7C4DFF", flex: 1}} edges={['bottom', 'top']}>
+          <SafeAreaView style={{backgroundColor: "#004880", flex: 1}} edges={['bottom', 'top']}>
             <StatusBar 
               style="light"
-              backgroundColor='#7C4DFF'
+              backgroundColor='#004880'
             />
           <Stack>
             <Stack.Screen 

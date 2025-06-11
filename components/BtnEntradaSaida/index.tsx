@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   transacoesSaida: {
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#004880',
     flexDirection: 'row',
     width: "50%",
     justifyContent: 'flex-end',
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
   },
   transacoesEntrada: {
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#004880',
     flexDirection: 'row',
     width: "50%",
     justifyContent: 'flex-end',

@@ -11,6 +11,19 @@ import { formatarValor } from ".";
 
 export default function Categorias() {
 
+  const coresDisponiveis = [
+    '#FF5252',
+    '#CDDC39',
+    '#00BCD4',
+    '#7C4DFF',
+    '#EC407A',
+    '#AB47BC',
+    '#66BB6A',
+    '#FFEB3B',
+    '#42A5F5',
+    '#FF8A65',
+  ];
+
   const transactionDatabase = useTransactionDatabase();
   const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
 
@@ -20,6 +33,7 @@ export default function Categorias() {
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novaCor, setNovaCor] = useState('#000000');
   const [loading, setLoading] = useState(false);
+  const [coresRestantes, setCoresRestantes] = useState(coresDisponiveis);
 
   const dispatch = useDispatch();
 
@@ -43,10 +57,6 @@ export default function Categorias() {
 }, []);
 
 
-  const coresDisponiveis = [
-    '#FF5722', '#03A9F4', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63',
-    '#00BCD4', '#FF9800', '#8BC34A', '#795548', '#607D8B', '#F44336',
-  ];
 
   const adicionarCategoria = async () => {
   if (novaCategoria.trim() === '') {
@@ -66,6 +76,7 @@ export default function Categorias() {
     dispatch(addCategoria(result));
     setNovaCategoria('');
     setNovaCor('#000000');
+    setCoresRestantes(coresRestantes.filter(c => c !== novaCor))
     console.log("Categoria adicionada:", result);
   } catch (error) {
     console.error(error);
@@ -132,7 +143,7 @@ const deleteCategoria = async (id: number, titulo: string) => {
 
           <View style={styles.colorPickerContainer}>
             <FlatList
-              data={coresDisponiveis}
+              data={coresRestantes}
               keyExtractor={(item) => item}
               showsHorizontalScrollIndicator={false}
               horizontal
@@ -162,7 +173,7 @@ const deleteCategoria = async (id: number, titulo: string) => {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
+            <View style={[styles.categoriaItem, { backgroundColor: "#F2F2F2", borderWidth: 1, borderColor: "#004880" }]}>
               <Text style={styles.categoriaText}>
                 {item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}
               </Text>
@@ -201,7 +212,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 30,
     padding: 16,
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#004880',
   },
   backButton: {
     marginRight: 12,
@@ -237,7 +248,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   addButton: {
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#004880',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -257,7 +268,7 @@ const styles = StyleSheet.create({
   },
   categoriaText: {
     fontSize: 16,
-    color: '#FFF',
+    color: "#000",
     fontWeight: 'bold',
   },
   modalContainer: {
@@ -283,7 +294,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
   },
   colorCircleSelected: {
-    borderColor: '#7C4DFF',
+    borderColor: '#004880',
     borderWidth: 3,
   },
   fecharModal: {

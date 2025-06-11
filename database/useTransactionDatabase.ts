@@ -17,11 +17,12 @@ export type CategoriaProps = {
 };
 
 export type CreateTransactionDTO = {
-  category: { id: number; titulo: string; cor: string };
+  categoryId: number;
   type: 'entrada' | 'saida';
   value: number;
   date: string;
 };
+
 
 export type CreateCategoriaDTO = {
   titulo: string;
@@ -31,7 +32,7 @@ export type CreateCategoriaDTO = {
 
 const QUERIES = {
   INSERT_CATEGORIA: `
-    INSERT OR IGNORE INTO categorias (titulo, cor)
+    INSERT OR IGNORE INTO categorias ( titulo, cor)
     VALUES (?, ?)
   `,
   GET_CATEGORIA_BY_ID: "SELECT * FROM categorias WHERE id = ?",
@@ -70,7 +71,7 @@ const QUERIES = {
   GET_RECEITAS: "SELECT SUM(value) as total FROM transactions WHERE type = 'entrada'",
   GET_DESPESAS: "SELECT SUM(value) as total FROM transactions WHERE type = 'saida'",
   DELETE_ALL_TRANSACTIONS: "DELETE FROM transactions",
-  GET_CATEGORIAS_SUM: "SELECT titulo, cor, valor FROM categorias",
+  GET_CATEGORIAS_SUM: "SELECT id, titulo, cor, valor FROM categorias",
   GET_ALL_CATEGORIAS: "SELECT * FROM categorias ORDER BY titulo ASC",
   DELETE_CATEGORIA_BY_ID: "DELETE FROM categorias WHERE id = ?",
   DELETE_ALL_CATEGORY: "DELETE FROM categorias",
@@ -126,13 +127,38 @@ export function useTransactionDatabase() {
     }
   };
 
-  const DeleteCategoriaById = async (id: number) => {
-    try {
-      return await db.runAsync(QUERIES.DELETE_CATEGORIA_BY_ID, [id]);
-    } catch (error) {
-      throw error;
-    }
-  };
+  const DeleteCategoriaAndRestoreValor = async (categoriaId: number) => {
+  try {
+    await db.withTransactionAsync(async () => {
+      
+      const transacoes = await db.getAllAsync<{
+        value: number;
+        type: 'entrada' | 'saida';
+        id: number;
+      }>(
+        `SELECT id, value, type FROM transactions WHERE category_id = ?`,
+        [categoriaId]
+      );
+
+      let totalSaida = 0;
+      for (const transacao of transacoes) {
+        if (transacao.type === 'saida') {
+          totalSaida += transacao.value;
+        }
+      }
+
+      await db.runAsync(`DELETE FROM transactions WHERE category_id = ?`, [categoriaId]);
+
+      await db.runAsync(QUERIES.DELETE_CATEGORIA_BY_ID, [categoriaId]);
+
+      console.log(`Categoria ${categoriaId} deletada. Valor estornado: ${totalSaida}`);
+    });
+  } catch (error) {
+    console.error("Erro ao deletar categoria e estornar valores:", error);
+    throw error;
+  }
+};
+
 
   const UpdateCategoria = async (id: number, data: CreateCategoriaDTO) => {
     try {
@@ -157,26 +183,14 @@ export function useTransactionDatabase() {
       await db.withTransactionAsync(async () => {
         await db.runAsync(
           QUERIES.INSERT_TRANSACTION,
-          [data.category.id, data.type, data.value, data.date]
+          [data.categoryId, data.type, data.value, data.date]
         );
 
         if (data.type === 'saida') {
-          const exists = await db.getFirstAsync<{ count: number }>(
-            `SELECT COUNT(*) as count FROM categorias WHERE id = ?`,
-            [data.category.id]
+            await db.runAsync(
+            `UPDATE categorias SET valor = valor + ? WHERE id = ?`,
+            [data.value, data.categoryId]
           );
-
-          if (exists?.count) {
-            await db.runAsync(
-              `UPDATE categorias SET valor = valor + ? WHERE id = ?`,
-              [data.value, data.category.id]
-            );
-          } else {
-            await db.runAsync(
-              `INSERT INTO categorias (id, titulo, cor, valor) VALUES (?, ?, ?, ?)`,
-              [data.category.id, data.category.titulo, data.category.cor, data.value]
-            );
-          }
         }
       });
     } catch (error) {
@@ -236,7 +250,7 @@ export function useTransactionDatabase() {
   const UpdateTransaction = async (id: number, data: CreateTransactionDTO) => {
     try {
       await db.runAsync(QUERIES.UPDATE_TRANSACTION_BY_ID, [
-        data.category.id,
+        data.categoryId,
         data.type,
         data.value,
         data.date,
@@ -312,7 +326,7 @@ export function useTransactionDatabase() {
     GetDespesas,
     GetSomaPorCategoria,
     DeleteAllTransactions,
-    DeleteCategoriaById,
+    DeleteCategoriaAndRestoreValor,
     DeleteAllCategoria,
     UpdateTransaction,
     DeleteTransaction,

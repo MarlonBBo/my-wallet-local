@@ -3,7 +3,6 @@ import { RootState } from '@/store';
 import { setTransactions } from '@/store/transactionSlice';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useRef } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -38,8 +37,6 @@ export default function Transaction() {
 
   return (
   <View style={styles.container}>
-    <StatusBar style="light" />
-
     <View style={styles.header}>
       <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
         <Feather name="arrow-left" size={30} color="#FFF" />

@@ -3,7 +3,6 @@ import { RootState } from "@/store";
 import { addCategoria, removeCategoria, setDataCategoria } from "@/store/dataCategoriaSlice";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
@@ -25,18 +24,23 @@ export default function Categorias() {
   const dispatch = useDispatch();
 
     useEffect(() => {
-    async function fetchCategorias() {
-      try {
-        const result = await transactionDatabase.GetAllCategorias();
-        dispatch(setDataCategoria(result));
-        console.log("Categorias fetched:", result);
-      } catch (error) {
-        console.error("Error fetching categorias:", error);
-      }
+  async function fetchCategorias() {
+    try {
+      const result = await transactionDatabase.GetAllCategorias();
+      const validatedData = result.map(item => ({
+        ...item,
+        id: item.id || Math.floor(Math.random() * 1000000) 
+      }));
+      dispatch(setDataCategoria(validatedData));
+      console.log("Categorias carregadas:", validatedData);
+      console.log("Categorias no Redux:", dataCaregoria, dataCaregoriaOrdenada);
+    } catch (error) {
+      console.error("Error fetching categorias:", error);
     }
+  }
 
-    fetchCategorias();
-  }, []);
+  fetchCategorias();
+}, []);
 
 
   const coresDisponiveis = [
@@ -56,9 +60,13 @@ export default function Categorias() {
       cor: novaCor,
       valor: 0
     });
+
+    console.log("Categoria criada:", result);
+
     dispatch(addCategoria(result));
     setNovaCategoria('');
     setNovaCor('#000000');
+    console.log("Categoria adicionada:", result);
   } catch (error) {
     console.error(error);
   } finally {
@@ -66,25 +74,28 @@ export default function Categorias() {
   }
 };
 
-const deleteCategoria = async (id: number) => {
-    try {
-      await transactionDatabase.DeleteCategoriaById(id);
-      dispatch(removeCategoria(id));
-    } catch (error) {
-      console.error("Erro ao deletar categoria:", error);
-    }
-  };
+const deleteCategoria = async (id: number, titulo: string) => {
+  Alert.alert(
+    "Excluir categoria",
+    `Deseja realmente excluir a categoria "${titulo}"?`,
+    [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await transactionDatabase.DeleteCategoriaAndRestoreValor(id);
+            dispatch(removeCategoria(id));
+          } catch (error) {
+            console.error("Erro ao deletar categoria:", error);
+          }
+        },
+      },
+    ]
+  );
+};
 
-  const confirmarExclusao = (id: number) => {
-    Alert.alert(
-      "Confirmação",
-      "Tem certeza que deseja excluir esta categoria?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Excluir", style: "destructive", onPress: () => deleteCategoria(id) }
-      ]
-    );
-  };
 
   // const navigateProps = (id: number, titulo: string, cor: string) => {
   //   router.push({
@@ -98,11 +109,8 @@ const deleteCategoria = async (id: number) => {
 
   const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
 
-
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
-
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Feather name="arrow-left" size={30} color="#FFF" />
@@ -146,24 +154,35 @@ const deleteCategoria = async (id: number) => {
       </KeyboardAvoidingView>
 
       {dataCaregoriaOrdenada.length === 0 ? (
-              <Text style={styles.emptyText}>Nenhuma Categoria cadastrada</Text>
-            ) : (
-              <FlatList
-                data={dataCaregoriaOrdenada}
-                keyExtractor={(item) => item.id != null ? item.id.toString() : item.titulo}
-                contentContainerStyle={styles.listContainer}
-                showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <View style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
-                    <Text style={styles.categoriaText}>{item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}</Text>
-                    <TouchableOpacity onPress={()=> confirmarExclusao(item.id)} style={{backgroundColor: "red", width: 30, height: 30, alignItems: "center", justifyContent: "center", borderRadius: 10}}>
-                      <Feather name="trash-2" size={20} color={"white"}/>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              />
-            )    
-      }
+        <Text style={styles.emptyText}>Nenhuma Categoria cadastrada</Text>
+      ) : (
+        <FlatList
+          data={dataCaregoriaOrdenada}
+          keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <View style={[styles.categoriaItem, { backgroundColor: item.cor || '#FFF' }]}>
+              <Text style={styles.categoriaText}>
+                {item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}
+              </Text>
+              <TouchableOpacity 
+                onPress={() => deleteCategoria(item.id, item.titulo)} 
+                style={{
+                  backgroundColor: "red", 
+                  width: 30, 
+                  height: 30, 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  borderRadius: 10
+                }}
+              >
+                <Feather name="trash-2" size={20} color={"white"}/>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      )}
 
       
     </View>

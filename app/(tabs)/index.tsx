@@ -161,9 +161,23 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
                 </View>
               </View>
             </View>
-          
-
         </View>
+      </View>
+      
+      <View style={{
+        backgroundColor: "#004880", 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        marginTop: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.,
+        shadowRadius: 8,
+        elevation: 5,
+        }}>
+        <Text style={{color: '#F2F2F2', fontSize: 16, fontStyle: 'italic', padding: 5}}>
+          Controle seu dinheiro, controle sua vida...
+        </Text>
       </View>
 
       <Text style={{ fontSize: 20, fontWeight: "bold", paddingVertical: 20, paddingHorizontal: 10, paddingBottom: 5, color: "#696969" }}>Despesas por categoria</Text>
@@ -176,12 +190,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
           </View>
         )
         : !(categoriasComValor.length > 0) ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start', marginTop: 20 }}>
-            <Image
-              style={{ width: 200, height: 200, alignSelf: 'center' }}
-              source={require('../../assets/images/wallet-vazia.png')}
-              contentFit="cover"
-            />
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
             <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9' }}>
               Não há dados de despesas
             </Text>

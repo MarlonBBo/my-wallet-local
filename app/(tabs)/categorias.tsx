@@ -3,9 +3,9 @@ import { RootState } from "@/store";
 import { addCategoria, removeCategoria, setDataCategoria } from "@/store/dataCategoriaSlice";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
+import { FlatList, Swipeable } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
 import { formatarValor } from ".";
 
@@ -36,6 +36,12 @@ export default function Categorias() {
   const [coresRestantes, setCoresRestantes] = useState(coresDisponiveis);
 
   const dispatch = useDispatch();
+
+  const swipeableRefs = useRef<{ [key: number]: Swipeable | null }>({});
+  
+    const abrirAcoes = (id: number) => {
+      swipeableRefs.current[id]?.openRight?.();
+    };
 
     useEffect(() => {
   async function fetchCategorias() {
@@ -86,26 +92,13 @@ export default function Categorias() {
 };
 
 const deleteCategoria = async (id: number, titulo: string) => {
-  Alert.alert(
-    "Excluir categoria",
-    `Deseja realmente excluir a categoria "${titulo}"?`,
-    [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Excluir",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await transactionDatabase.DeleteCategoriaAndRestoreValor(id);
-            dispatch(removeCategoria(id));
-          } catch (error) {
-            console.error("Erro ao deletar categoria:", error);
-          }
-        },
-      },
-    ]
-  );
-};
+    try {
+      await transactionDatabase.DeleteCategoriaAndRestoreValor(id);
+      dispatch(removeCategoria(id));
+    } catch (error) {
+      console.error("Erro ao deletar categoria:", error);
+    }
+  }
 
 
   // const navigateProps = (id: number, titulo: string, cor: string) => {
@@ -173,24 +166,43 @@ const deleteCategoria = async (id: number, titulo: string) => {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={[styles.categoriaItem, { backgroundColor: "#F2F2F2", borderWidth: 1, borderColor: "#004880" }]}>
-              <Text style={styles.categoriaText}>
-                {item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}
-              </Text>
-              <TouchableOpacity 
-                onPress={() => deleteCategoria(item.id, item.titulo)} 
-                style={{
-                  backgroundColor: "red", 
-                  width: 30, 
-                  height: 30, 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  borderRadius: 10
-                }}
+            <Swipeable
+              containerStyle={{borderRadius: 2}}
+                ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
+                renderRightActions={() => (
+                  <TouchableOpacity 
+                    onPress={() => deleteCategoria(item.id, item.titulo)} 
+                    style={{
+                      width: 50,
+                      height: '80%',
+                      backgroundColor: '#C2185B',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: 10,
+                    }}
+                  >
+                  <Feather name="trash-2" size={20} color={"white"}/>
+                  </TouchableOpacity>
+                )}
+                overshootRight={false}
               >
-                <Feather name="trash-2" size={20} color={"white"}/>
+                <TouchableOpacity
+                  onPress={() => abrirAcoes(item.id)}
+                  activeOpacity={10}
+                  style={[
+                    styles.categoryItem,
+                  ]}
+                >
+                <View style={[styles.categoriaItem, { backgroundColor: "#FFF", borderWidth: 1, borderColor: item.cor }]}>
+                  <Text style={styles.categoriaText}>
+                    {item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}
+                  </Text>
+                  <Feather name="chevron-left" size={20} color={"black"}/>
+                </View>
               </TouchableOpacity>
-            </View>
+
+            </Swipeable>
+            
           )}
         />
       )}
@@ -242,6 +254,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+  },
+  categoryItem:{
+
   },
   corText: {
     color: '#FFF',

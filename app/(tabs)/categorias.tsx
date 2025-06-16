@@ -1,6 +1,6 @@
 import { useTransactionDatabase } from "@/database/useTransactionDatabase";
 import { RootState } from "@/store";
-import { addCategoria, removeCategoria, setDataCategoria } from "@/store/dataCategoriaSlice";
+import { addCategoria, removeCategoria } from "@/store/dataCategoriaSlice";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -10,7 +10,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { formatarValor } from ".";
 
 export default function Categorias() {
-
   const coresDisponiveis = [
     '#FF5252',
     '#CDDC39',
@@ -24,97 +23,116 @@ export default function Categorias() {
     '#FF8A65',
   ];
 
-  const transactionDatabase = useTransactionDatabase();
-  const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
-
-
+  const dispatch = useDispatch();
   const router = useRouter();
+  const transactionDatabase = useTransactionDatabase();
 
   const [novaCategoria, setNovaCategoria] = useState('');
   const [novaCor, setNovaCor] = useState('#000000');
-  const [loading, setLoading] = useState(false);
-  const [coresRestantes, setCoresRestantes] = useState(coresDisponiveis);
-
-  const dispatch = useDispatch();
+  const [coresRestantes, setCoresRestantes] = useState<string[]>(coresDisponiveis);
 
   const swipeableRefs = useRef<{ [key: number]: Swipeable | null }>({});
-  
-    const abrirAcoes = (id: number) => {
-      swipeableRefs.current[id]?.openRight?.();
-    };
 
-    useEffect(() => {
-  async function fetchCategorias() {
-    try {
-      const result = await transactionDatabase.GetAllCategorias();
-      const validatedData = result.map(item => ({
-        ...item,
-        id: item.id || Math.floor(Math.random() * 1000000) 
-      }));
-      dispatch(setDataCategoria(validatedData));
-      console.log("Categorias carregadas:", validatedData);
-      console.log("Categorias no Redux:", dataCaregoria, dataCaregoriaOrdenada);
-    } catch (error) {
-      console.error("Error fetching categorias:", error);
-    }
-  }
+  const dataCategoria = useSelector((state: RootState) => state.dataCategoria.lista);
+  const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
 
-  fetchCategorias();
-}, []);
+  const dataCategoriaOrdenada = [...dataCategoria].sort((a, b) => b.valor - a.valor);
 
-
+  useEffect(() => {
+  const coresUsadas = dataCategoria.map(cat => cat.cor);
+  setCoresRestantes(coresDisponiveis.filter(
+    cor => !coresUsadas.includes(cor)
+  ));
+}, [dataCategoria]);
 
   const adicionarCategoria = async () => {
   if (novaCategoria.trim() === '') {
     Alert.alert("Atenção", "Preencha o nome da categoria!");
     return;
   }
+
+  const nomeNormalizado = novaCategoria.trim().toLowerCase();
+  const existeCategoria = dataCategoriaOrdenada.some(
+    (cat) => cat.titulo.trim().toLowerCase() === nomeNormalizado
+  );
+
+  if (existeCategoria) {
+    Alert.alert("Atenção", "Já existe uma categoria com esse nome!");
+    return;
+  }
+
   try {
-    setLoading(true);
-    const result = await transactionDatabase.CreateCategoria({
-      titulo: novaCategoria,
+
+    const nova = {
+      titulo: novaCategoria.trim(),
       cor: novaCor,
-      valor: 0
-    });
+      valor: 0,
+    };
 
-    console.log("Categoria criada:", result);
+    const resultado = await transactionDatabase.CreateCategoria(nova);
+    dispatch(addCategoria(resultado));
 
-    dispatch(addCategoria(result));
     setNovaCategoria('');
     setNovaCor('#000000');
-    setCoresRestantes(coresRestantes.filter(c => c !== novaCor))
-    console.log("Categoria adicionada:", result);
+
+    setCoresRestantes(prev => prev.filter(cor => cor !== novaCor));
   } catch (error) {
-    console.error(error);
-  } finally {
-    setLoading(false);
+    console.error("Erro ao adicionar categoria:", error);
   }
 };
 
-const deleteCategoria = async (id: number, titulo: string) => {
-    try {
-      await transactionDatabase.DeleteCategoriaAndRestoreValor(id);
-      dispatch(removeCategoria(id));
-    } catch (error) {
-      console.error("Erro ao deletar categoria:", error);
-    }
+ const deleteCategoria = (id: number) => {
+  const categoria = dataCategoria.find(c => c.id === id);
+  if (!categoria) {
+    console.warn("Categoria não encontrada:", id);
+    return;
   }
 
+  Alert.alert(
+    "Excluir Categoria",
+    `Tem certeza que deseja excluir a categoria "${categoria.titulo}"?`,
+    [
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const corParaRecuperar = categoria.cor;
 
-  // const navigateProps = (id: number, titulo: string, cor: string) => {
-  //   router.push({
-  //     pathname: "/(tabs)",
-  //     params: { id: id.toString(), titulo, cor}
-  //   });
-  // };
+            await transactionDatabase.DeleteCategoriaAndRestoreValor(id);
+            dispatch(removeCategoria(id));
+
+            setCoresRestantes(prev => {
+              const corExisteNasDisponiveis = coresDisponiveis.includes(corParaRecuperar);
+              const corJaDisponivel = prev.includes(corParaRecuperar);
+              if (corExisteNasDisponiveis && !corJaDisponivel) {
+                return [...prev, corParaRecuperar];
+              }
+              return prev;
+            });
+
+          } catch (error) {
+            console.error("Erro ao deletar categoria:", error);
+          }
+        },
+      },
+    ],
+    { cancelable: true }
+  );
+};
 
 
-  const dataCaregoria = useSelector((state: RootState) => state.dataCategoria.lista);
-
-  const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
+  const abrirAcoes = (id: number) => {
+    swipeableRefs.current[id]?.openRight?.();
+  };
 
   return (
     <View style={styles.container}>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Feather name="arrow-left" size={30} color="#FFF" />
@@ -134,83 +152,91 @@ const deleteCategoria = async (id: number, titulo: string) => {
           onChangeText={setNovaCategoria}
         />
 
-          <View style={styles.colorPickerContainer}>
-            <FlatList
-              data={coresRestantes}
-              keyExtractor={(item) => item}
-              showsHorizontalScrollIndicator={false}
-              horizontal
-              renderItem={({ item: cor }) => (
-                <TouchableOpacity
-                  style={[styles.colorCircle, { backgroundColor: cor }, novaCor === cor && styles.colorCircleSelected]}
-                  onPress={() => setNovaCor(cor)}
-                >
-                  {novaCor === cor && <Text style={styles.corText}>✔</Text>}
-                </TouchableOpacity>
-              )}
-              contentContainerStyle={{ paddingHorizontal: 8 }}
-            />
-          </View>
+        <View style={styles.colorPickerContainer}>
+          <FlatList
+            data={coresRestantes.length > 0 ? coresRestantes : coresDisponiveis}
+            keyExtractor={(item) => item}
+            showsHorizontalScrollIndicator={false}
+            horizontal
+            renderItem={({ item: cor }) => (
+              <TouchableOpacity
+                style={[
+                  styles.colorCircle,
+                  { backgroundColor: cor },
+                  novaCor === cor && styles.colorCircleSelected,
+                ]}
+                onPress={() => setNovaCor(cor)}
+              >
+                {novaCor === cor && <Text style={styles.corText}>✔</Text>}
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={{ paddingHorizontal: 8 }}
+            ListEmptyComponent={
+              <Text style={{ color: '#999' }}>Todas as cores estão em uso</Text>
+            }
+          />
+        </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={adicionarCategoria} disabled={loading}>
-          {loading ? <Text style={{ color: 'white' }}>...</Text> : <Feather name="plus" size={24} color="#FFF" />}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={adicionarCategoria}
+        >
+          <Feather name="plus" size={24} color="#FFF" />
         </TouchableOpacity>
+
       </KeyboardAvoidingView>
 
-      {dataCaregoriaOrdenada.length === 0 ? (
+      {dataCategoriaOrdenada.length === 0 ? (
         <Text style={styles.emptyText}>Nenhuma Categoria cadastrada</Text>
       ) : (
         <FlatList
-          data={dataCaregoriaOrdenada}
-          keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
+          data={dataCategoriaOrdenada}
+          keyExtractor={(item) => item.id?.toString() ?? Math.random().toString()}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <Swipeable
-              containerStyle={{borderRadius: 2}}
-                ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
-                renderRightActions={() => (
-                  <TouchableOpacity 
-                    onPress={() => deleteCategoria(item.id, item.titulo)} 
-                    style={{
-                      width: 50,
-                      height: '80%',
-                      backgroundColor: '#C2185B',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      borderRadius: 10,
-                    }}
-                  >
-                  <Feather name="trash-2" size={20} color={"white"}/>
-                  </TouchableOpacity>
-                )}
-                overshootRight={false}
-              >
+              containerStyle={{ borderRadius: 2 }}
+              ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
+              renderRightActions={() => (
                 <TouchableOpacity
-                  onPress={() => abrirAcoes(item.id)}
-                  activeOpacity={10}
-                  style={[
-                    styles.categoryItem,
-                  ]}
+                  onPress={() => deleteCategoria(item.id)}
+                  style={{
+                    width: 50,
+                    height: '80%',
+                    backgroundColor: '#C2185B',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: 10,
+                  }}
                 >
-                <View style={[styles.categoriaItem, { backgroundColor: "#FFF", borderWidth: 1, borderColor: item.cor }]}>
+                  <Feather name="trash-2" size={20} color="white" />
+                </TouchableOpacity>
+              )}
+              overshootRight={false}
+            >
+              <TouchableOpacity
+                onPress={() => abrirAcoes(item.id)}
+                activeOpacity={10}
+              >
+                <View style={[
+                  styles.categoriaItem,
+                  { backgroundColor: "#FFF", borderWidth: 2, borderColor: item.cor }
+                ]}>
                   <Text style={styles.categoriaText}>
                     {item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}
                   </Text>
-                  <Feather name="chevron-left" size={20} color={"black"}/>
+                  <Feather name="chevron-left" size={20} color="black" />
                 </View>
               </TouchableOpacity>
-
             </Swipeable>
-            
           )}
         />
       )}
-
-      
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -254,9 +280,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-  },
-  categoryItem:{
-
   },
   corText: {
     color: '#FFF',

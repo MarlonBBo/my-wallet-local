@@ -10,8 +10,7 @@ export default function TabLayout() {
           height: 60, 
           paddingBottom: 5, 
         },
-        // animation: 'fade', 
-        // tabBarHideOnKeyboard: true, 
+        
       }}
     >
       <Tabs.Screen

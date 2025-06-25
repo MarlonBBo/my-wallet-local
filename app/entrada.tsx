@@ -74,6 +74,8 @@ export default function Entrada() {
         <TouchableOpacity onPress={()=> router.push('/(tabs)')}>
           <Feather name="x" size={30} color="#000" />
         </TouchableOpacity>
+        <Text style={{fontWeight: "bold", fontSize: 25, textDecorationLine:'underline'}}>Entrada</Text>
+        
       </View>
 
       <Text style={styles.title}>Qual é o valor da transferência?</Text>

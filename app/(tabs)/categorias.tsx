@@ -4,7 +4,7 @@ import { addCategoria, removeCategoria } from "@/store/dataCategoriaSlice";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { FlatList, Swipeable } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
 import { formatarValor } from ".";
@@ -28,7 +28,6 @@ export default function Categorias() {
   const transactionDatabase = useTransactionDatabase();
 
   const [novaCategoria, setNovaCategoria] = useState('');
-  const [novaCor, setNovaCor] = useState('#000000');
   const [coresRestantes, setCoresRestantes] = useState<string[]>(coresDisponiveis);
 
   const swipeableRefs = useRef<{ [key: number]: Swipeable | null }>({});
@@ -46,7 +45,7 @@ export default function Categorias() {
 }, [dataCategoria]);
 
   const adicionarCategoria = async () => {
-  if (novaCategoria.trim() === '') {
+  if (novaCategoria.trim() === '' ) {
     Alert.alert("Atenção", "Preencha o nome da categoria!");
     return;
   }
@@ -61,11 +60,13 @@ export default function Categorias() {
     return;
   }
 
+  const cor = coresRestantes[Math.floor(Math.random() * coresRestantes.length)]
+
   try {
 
     const nova = {
       titulo: novaCategoria.trim(),
-      cor: novaCor,
+      cor: cor,
       valor: 0,
     };
 
@@ -73,9 +74,8 @@ export default function Categorias() {
     dispatch(addCategoria(resultado));
 
     setNovaCategoria('');
-    setNovaCor('#000000');
 
-    setCoresRestantes(prev => prev.filter(cor => cor !== novaCor));
+    setCoresRestantes(prev => prev.filter(c => c !== cor));
   } catch (error) {
     console.error("Erro ao adicionar categoria:", error);
   }
@@ -151,39 +151,25 @@ export default function Categorias() {
           value={novaCategoria}
           onChangeText={setNovaCategoria}
         />
-
-        <View style={styles.colorPickerContainer}>
-          <FlatList
-            data={coresRestantes.length > 0 ? coresRestantes : coresDisponiveis}
-            keyExtractor={(item) => item}
-            showsHorizontalScrollIndicator={false}
-            horizontal
-            renderItem={({ item: cor }) => (
-              <TouchableOpacity
-                style={[
-                  styles.colorCircle,
-                  { backgroundColor: cor },
-                  novaCor === cor && styles.colorCircleSelected,
-                ]}
-                onPress={() => setNovaCor(cor)}
-              >
-                {novaCor === cor && <Text style={styles.corText}>✔</Text>}
-              </TouchableOpacity>
-            )}
-            contentContainerStyle={{ paddingHorizontal: 8 }}
-            ListEmptyComponent={
-              <Text style={{ color: '#999' }}>Todas as cores estão em uso</Text>
-            }
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={adicionarCategoria}
-        >
-          <Feather name="plus" size={24} color="#FFF" />
-        </TouchableOpacity>
-
+      
+          <TouchableOpacity onPress={() => (adicionarCategoria(), Keyboard.dismiss())} style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 5,
+            borderColor: "#004880",
+            borderWidth: 1,
+            padding: 8,
+            borderRadius: 8,
+            flexDirection: "row"
+          }}>
+            <Text style={{
+              fontSize: 15,
+              fontWeight: "bold",
+              color: "#004880"
+            }}>Criar categoria</Text>
+            <Feather name="plus" size={20} color={"#044880"}/>
+          </TouchableOpacity>
       </KeyboardAvoidingView>
 
       {dataCategoriaOrdenada.length === 0 ? (

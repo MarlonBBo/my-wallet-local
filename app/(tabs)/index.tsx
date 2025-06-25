@@ -3,7 +3,6 @@ import { useTransactionDatabase } from '@/database/useTransactionDatabase';
 import { RootState } from '@/store';
 import { toggleVisibilidade } from '@/store/visibilidadeSlice';
 import { Feather } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from "react";
 import { ActivityIndicator, InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -117,12 +116,8 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             <Text style={styles.title}>Maio</Text>
             <Feather name='chevron-right' size={20} color={'black'} />
           </View>
-          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true}>
-          <Image
-            style={styles.avatar}
-            source={require('../../assets/images/pf.png')}
-            contentFit="cover"
-          />
+          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true} style={styles.avatar}>
+            <Feather name='user-x' size={25} />
           </TouchableOpacity>
         </View>
 
@@ -176,7 +171,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
         elevation: 5,
         }}>
         <Text style={{color: '#F2F2F2', fontSize: 16, fontStyle: 'italic', padding: 5}}>
-          Controle seu dinheiro, controle sua vida...
+          New: funcionalidade de gastos futuros em breve...
         </Text>
       </View>
 
@@ -331,6 +326,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1,
     borderColor: '#696969',
+    alignItems: "center",
+    justifyContent: "center"
   },
   graphContainer: {
     gap: 10,

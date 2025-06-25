@@ -3,7 +3,6 @@ import { RootState } from '@/store';
 import { setTransactions } from '@/store/transactionSlice';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useRef } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -37,17 +36,16 @@ export default function Transaction() {
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={30} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Transações</Text>
-      </View>
+  <View style={styles.container}>
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Feather name="arrow-left" size={30} color="#FFF" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Transações</Text>
+    </View>
 
-      <View>
-        {transactions.length === 0 ? (
+    <View style={{flex: 1, paddingTop: 10, backgroundColor: '#F9F9F9'}}>
+      {transactions.length === 0 ? (
         <Text style={styles.emptyText}>Nenhuma transação cadastrada</Text>
       ) : (
         <FlatList
@@ -55,75 +53,73 @@ export default function Transaction() {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          renderItem={({ item }) => (
-          <Swipeable
-            ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
-            renderRightActions={() => (
-              <BtnDeleteTransaction transactionId={item.id} />
-            )}
-            overshootRight={false}
-          >
-            <TouchableOpacity
-              onPress={() => {
-                abrirAcoes(item.id);
-              }}
-              activeOpacity={10}
-              style={[
-                styles.transactionItem,
-                {
-                  backgroundColor: '#FFF',
-                  borderLeftWidth: 5,
-                  borderLeftColor:
-                    item.type === 'entrada' ? '#00796B' : '#C2185B',
-                },
-              ]}
-            >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
+          renderItem={({ item }) => {
+            const isEntrada = item.type === 'entrada';
+            const cor = isEntrada ? '#00796B' : '#C2185B';
+            const titulo = isEntrada ? 'Entrada' : item.category?.titulo;
+
+            return (
+              <Swipeable
+              friction={0.1}
+              containerStyle={{borderRadius: 10}}
+                ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
+                renderRightActions={() => (
+                  <BtnDeleteTransaction transactionId={item.id} />
+                )}
+                overshootRight={false}
               >
-                <View>
-                  <Text
-                    style={[
-                      styles.category,
-                      { color: item.type === 'entrada' ? '#00796B' : '#C2185B' },
-                    ]}
-                  >
-                    {item.type === 'entrada' ? 'Entrada' : item.category?.titulo}
-                  </Text>
-                  <Text style={styles.date}>
-                    {new Date(item.date).toLocaleDateString()}
-                  </Text>
-                </View>
-                <Text
+                <TouchableOpacity
+                  onPress={() => abrirAcoes(item.id)}
+                  activeOpacity={10}
                   style={[
-                    styles.amount,
-                    { color: item.type === 'entrada' ? '#00796B' : '#C2185B' },
+                    styles.transactionItem,
+                    {
+                      backgroundColor: '#FFF',
+                      borderLeftWidth: 5,
+                      borderLeftColor: cor,
+                    },
                   ]}
                 >
-                  {mostrarValores
-                    ? item.type === 'entrada'
-                      ? '+'
-                      : '-'
-                    : ''}{' '}
-                  {mostrarValores ? formatarValor(item.value) : '****'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </Swipeable>
-        )}
-      />
-    )}
-    </View>
+                  <View style={styles.transactionContent}>
+                    <View>
+                      <Text style={[styles.category, { color: cor }]}>
+                        {titulo}
+                      </Text>
+                      <Text style={styles.date}>
+                        {new Date(item.date).toLocaleDateString()}
+                      </Text>
+                    </View>
 
+                    <View style={styles.valueWrapper}>
+                      <Feather name="chevron-left" size={24} color="#888" />
+                      <Text style={[styles.amount, { color: cor }]}>
+                        {mostrarValores
+                          ? `${isEntrada ? '+' : '-'} ${formatarValor(item.value)}`
+                          : '****'}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Swipeable>
+            );
+          }}
+        />
+      )}
     </View>
-  );
+  </View>
+);
+
 }
 
 const styles = StyleSheet.create({
+    transactionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  valueWrapper: {
+    alignItems: 'flex-end',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F2F2F2',
@@ -133,18 +129,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 16,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#FFF',
   },
   transactionItem: {
-    
     padding: 15,
     borderRadius: 10,
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
-    shadowRadius: 0,
-    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 1.41,
+    elevation: 2,
     marginBottom: 10,
-    elevation: 5,
+    backgroundColor: '#FFF',
+    borderLeftWidth: 5,
   },
   category: {
     fontSize: 16,
@@ -170,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 30,
     padding: 16,
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#004880',
   },
   backButton: {
     marginRight: 12,

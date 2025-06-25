@@ -5,7 +5,7 @@ import visibilidadeReducer from './visibilidadeSlice';
 
 export const store = configureStore({
   reducer: {
-    ...reducersTransactions, // importa transactions, total, receitas, despesas
+    ...reducersTransactions, 
     dataCategoria: dataCategoriaSlice,
     visibilidade: visibilidadeReducer,
   },

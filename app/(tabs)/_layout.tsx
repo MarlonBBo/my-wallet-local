@@ -3,13 +3,22 @@ import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: '#7C4DFF' }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: '#00008B',
+        tabBarStyle: {
+          height: 60, 
+          paddingBottom: 5, 
+        },
+        
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'home',
           headerShown: false,
-          animation:'shift',
+          animation:'fade',
           tabBarIcon: ({ color }) => <Feather size={25} name="home" color={color} />,
         }}
       />
@@ -17,7 +26,7 @@ export default function TabLayout() {
         name="transaction"
         options={{
           title: 'Trasações',
-          animation: "shift",
+          animation: "fade",
           headerShown: false,
           tabBarIcon: ({ color }) => <Feather size={25} name="repeat" color={color} />,
         }}
@@ -27,7 +36,7 @@ export default function TabLayout() {
         name="categorias"
         options={{
           title: 'Categorias',
-          animation: "shift",
+          animation: "fade",
           headerShown: false,
           tabBarIcon: ({ color }) => <Feather size={25} name="clipboard" color={color} />,
         }}

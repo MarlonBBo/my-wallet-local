@@ -3,7 +3,6 @@ import { useTransactionDatabase } from '@/database/useTransactionDatabase';
 import { RootState } from '@/store';
 import { toggleVisibilidade } from '@/store/visibilidadeSlice';
 import { Feather } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from "react";
 import { ActivityIndicator, InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -117,12 +116,8 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             <Text style={styles.title}>Maio</Text>
             <Feather name='chevron-right' size={20} color={'black'} />
           </View>
-          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true}>
-          <Image
-            style={styles.avatar}
-            source={require('../../assets/images/pf.png')}
-            contentFit="cover"
-          />
+          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true} style={styles.avatar}>
+            <Feather name='user-x' size={25} />
           </TouchableOpacity>
         </View>
 
@@ -143,27 +138,41 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center'}}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-up' size={30} color={'#32CD32'} />
+                  <Feather name='arrow-up' size={30} color={'#004880'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#32CD32" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
                 </View>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-down' size={30} color={'#FF3009'} />
+                  <Feather name='arrow-down' size={30} color={'#004880'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#FF3009" }}>{mostrarValores ? formatarValor(Despesas): '*****'}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Despesas): '*****'}</Text>
                 </View>
               </View>
             </View>
-          
-
         </View>
+      </View>
+      
+      <View style={{
+        backgroundColor: "#004880", 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        marginTop: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.,
+        shadowRadius: 8,
+        elevation: 5,
+        }}>
+        <Text style={{color: '#F2F2F2', fontSize: 16, fontStyle: 'italic', padding: 5}}>
+          New: funcionalidade de gastos futuros em breve...
+        </Text>
       </View>
 
       <Text style={{ fontSize: 20, fontWeight: "bold", paddingVertical: 20, paddingHorizontal: 10, paddingBottom: 5, color: "#696969" }}>Despesas por categoria</Text>
@@ -171,17 +180,12 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
       {
         !ready ? (
           <View style={{ marginTop: 20, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#7C4DFF" />
+            <ActivityIndicator size="large" color="#004880" />
             <Text style={{ marginTop: 10, color: '#A9A9A9', fontSize: 14 }}>Carregando...</Text>
           </View>
         )
         : !(categoriasComValor.length > 0) ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start', marginTop: 20 }}>
-            <Image
-              style={{ width: 200, height: 200, alignSelf: 'center' }}
-              source={require('../../assets/images/wallet-vazia.png')}
-              contentFit="cover"
-            />
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
             <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9' }}>
               Não há dados de despesas
             </Text>
@@ -322,6 +326,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1,
     borderColor: '#696969',
+    alignItems: "center",
+    justifyContent: "center"
   },
   graphContainer: {
     gap: 10,

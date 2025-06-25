@@ -60,6 +60,7 @@ export default function Transaction() {
 
             return (
               <Swipeable
+              friction={0.1}
               containerStyle={{borderRadius: 10}}
                 ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
                 renderRightActions={() => (
@@ -90,7 +91,7 @@ export default function Transaction() {
                     </View>
 
                     <View style={styles.valueWrapper}>
-                      <Feather name="chevron-right" size={24} color="#888" />
+                      <Feather name="chevron-left" size={24} color="#888" />
                       <Text style={[styles.amount, { color: cor }]}>
                         {mostrarValores
                           ? `${isEntrada ? '+' : '-'} ${formatarValor(item.value)}`
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 30,
     padding: 16,
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#004880',
   },
   backButton: {
     marginRight: 12,

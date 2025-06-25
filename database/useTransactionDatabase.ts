@@ -305,7 +305,7 @@ export function useTransactionDatabase() {
   // Limpeza
   const DeleteAllTransactions = async () => {
     try {
-      await db.withTransactionAsync(async () => {
+        await db.withTransactionAsync(async () => {
         await db.execAsync(QUERIES.DELETE_ALL_TRANSACTIONS);
         await db.execAsync("UPDATE categorias SET valor = 0");
       });

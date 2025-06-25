@@ -5,7 +5,7 @@ import { setTotal } from '@/store/transactionSlice';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,18 +19,18 @@ export default function Saida() {
 
   const [open, setOpen] = useState(false);
   const [valorCentavos, setValorCentavos] = useState(0);
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState<number | null>(null);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<number | string | null>(null);
   
   const categorias = useSelector((state: RootState) => state.dataCategoria.lista);
   const total = useSelector((state: RootState) => state.total.value);
 
-  const items = categorias.map(cat => {
-  console.log("Categoria:", cat);
-  return {
-    label: cat.titulo,
-    value: cat.id
-  };
-});
+  const items = [
+    ...categorias.map(cat => ({
+      label: cat.titulo,
+      value: cat.id
+    })),
+    { label: '+ Criar nova categoria', value: 'nova-categoria' }
+  ];
 
 
   const handleAddTransaction = async () => {
@@ -41,7 +41,7 @@ export default function Saida() {
 
     try {
       await db.CreateTransaction({
-        categoryId: categoriaSelecionada, 
+        categoryId: typeof categoriaSelecionada === 'number' ? categoriaSelecionada : 0, 
         type: 'saida',
         value: valorCentavos,
         date: new Date().toISOString(),
@@ -74,6 +74,7 @@ export default function Saida() {
       alert("Erro ao salvar transação.");
     }
   }
+  
 
   const handleChange = (text: string) => {
     const numeros = text.replace(/\D/g, '');
@@ -96,6 +97,7 @@ export default function Saida() {
           <TouchableOpacity onPress={()=> router.push('/(tabs)')}>
             <Feather name="x" size={30} color="#000" />
           </TouchableOpacity>
+          <Text style={{fontWeight: "bold", fontSize: 25, textDecorationLine:'underline'}}>Saída</Text>
         </View>
 
         <Text style={styles.title}>Qual é o valor da transferência?</Text>
@@ -115,16 +117,23 @@ export default function Saida() {
         <View style={{marginTop: 20, width: '100%', gap: 15 }}>
           <View style={{ zIndex: 1000 }}>
             <DropDownPicker
-              searchable={true}
               searchPlaceholder="Buscar categoria..."
               open={open}
               value={categoriaSelecionada}
               items={items}
+              onPress={() => {
+                Keyboard.dismiss();
+              }}
               setOpen={setOpen}
               setValue={setCategoriaSelecionada}
               onChangeValue={(value) => {
-                setCategoriaSelecionada(value);
-                console.log("Categoria selecionada:", items);
+                if (value === 'nova-categoria') {
+                  setOpen(false); 
+                  setCategoriaSelecionada(null)
+                  router.push('/(tabs)/categorias');
+                } else {
+                  setCategoriaSelecionada(value);
+                }
               }}
               placeholder="Selecione uma categoria"
               style={styles.dropDown}
@@ -132,20 +141,17 @@ export default function Saida() {
               textStyle={styles.dropDownText}
               placeholderStyle={styles.placeholderStyle}
               listMode="SCROLLVIEW"
-              ArrowDownIconComponent={({ style }) => <Feather name="chevron-down" size={20} color="#7C4DFF" />}
-              ArrowUpIconComponent={({ style }) => <Feather name="chevron-up" size={20} color="#7C4DFF" />}
+              ArrowDownIconComponent={() => <Feather name="chevron-down" size={20} color="#004880" />}
+              ArrowUpIconComponent={() => <Feather name="chevron-up" size={20} color="#004880" />}
             />
-          </View>
 
-          <TouchableOpacity style={styles.addCategoria} onPress={() => router.push('/(tabs)/categorias')}>
-            <Text style={styles.addCategoriaText}>+ Criar nova categoria</Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
       <TouchableOpacity 
         style={{
-          backgroundColor: '#7C4DFF',
+          backgroundColor: '#004880',
           width: 60,
           height: 60,
           borderRadius: 30,
@@ -226,16 +232,11 @@ placeholderStyle: {
 },
 
 addCategoria: {
-  marginTop: 12,
-  paddingVertical: 10,
-  alignItems: 'center',
-  borderRadius: 10,
-  borderWidth: 1,
-  borderColor: '#7C4DFF',
+  alignItems: 'flex-start',
 },
 
 addCategoriaText: {
-  color: '#7C4DFF',
+  color: '#888',
   fontSize: 15,
   fontWeight: "600",
 },

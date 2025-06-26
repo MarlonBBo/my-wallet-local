@@ -65,8 +65,10 @@ export default function Entrada() {
   const handleChange = (text: string) => {
     const numeros = text.replace(/\D/g, '');
     const numeroComoInt = parseInt(numeros || '0', 10);
-    setValorCentavos(numeroComoInt);
+    setValorCentavos(Math.max(numeroComoInt, 0));
   };
+
+
 
   return (
     <View style={styles.container}>
@@ -85,12 +87,13 @@ export default function Entrada() {
 
       <TextInput
         style={styles.input}
-        placeholder="R$ 0,00"
         keyboardType="numeric"
-        value={formatarValor(valorCentavos)}
+        value={valorCentavos === 0 ? '' : formatarValor(valorCentavos)}
         onChangeText={handleChange}
-        placeholderTextColor="#000"
+        placeholder="R$ 0,00"
+        placeholderTextColor="#999"
       />
+
 
       <TouchableOpacity 
         style={{backgroundColor: '#004880', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 24, right: 24}}

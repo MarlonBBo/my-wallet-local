@@ -79,7 +79,7 @@ export default function Saida() {
   const handleChange = (text: string) => {
     const numeros = text.replace(/\D/g, '');
     const numeroComoInt = parseInt(numeros || '0', 10);
-    setValorCentavos(numeroComoInt);
+    setValorCentavos(Math.max(numeroComoInt, 0));
   };
 
   return (
@@ -107,11 +107,11 @@ export default function Saida() {
 
         <TextInput
           style={styles.input}
-          placeholder="R$ 0,00"
           keyboardType="numeric"
-          value={formatarValor(valorCentavos)}
+          value={valorCentavos === 0 ? '' : formatarValor(valorCentavos)}
           onChangeText={handleChange}
-          placeholderTextColor="#000"
+          placeholder="R$ 0,00"
+          placeholderTextColor="#999"
         />
 
         <View style={{marginTop: 20, width: '100%', gap: 15 }}>

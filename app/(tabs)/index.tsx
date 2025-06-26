@@ -6,8 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from "react";
 import { ActivityIndicator, InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { FlatList, ScrollView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
 import { Pie, PolarChart } from 'victory-native';
 
@@ -107,6 +106,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
 
   return (
     <View style={styles.container}>
+      <ScrollView>
       <View style={styles.header}>
         <View style={styles.status}>
           <Text style={styles.side}>Home</Text>
@@ -136,23 +136,24 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
 
           
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center'}}>
+             
+             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-up' size={30} color={'#004880'} />
-                </View>
-                <View>
-                  <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
-                </View>
-              </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
-                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-down' size={30} color={'#004880'} />
+                  <Feather name='arrow-down' size={30} color={'#DC143C'} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
                   <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Despesas): '*****'}</Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10}}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
+                  <Feather name='arrow-up' size={30} color={'#008000'} />
+                </View>
+                <View>
+                  <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
                 </View>
               </View>
             </View>
@@ -176,7 +177,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
       </View>
 
       <Text style={{ fontSize: 20, fontWeight: "bold", paddingVertical: 20, paddingHorizontal: 10, paddingBottom: 5, color: "#696969" }}>Despesas por categoria</Text>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 80 }}>
+      <View style={{ paddingHorizontal: 20, paddingBottom: 80 }}>
       {
         !ready ? (
           <View style={{ marginTop: 20, alignItems: 'center' }}>
@@ -193,10 +194,7 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
         ) : (
           <TouchableOpacity 
             onPress={()=> (serViewFullPolarChart(true), setDisabledState(true))}
-            style={[styles.graphContainer, {
-              flexDirection: viewFullPolarChart ? "column" : "row",
-              height: viewFullPolarChart ? "100%" : 200,
-            }]}
+            style={[viewFullPolarChart ? styles.graphContainer2 : styles.graphContainer]}
             disabled={disabledState}>
             {
               !viewFullPolarChart ? (
@@ -221,10 +219,12 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
                       <Pie.Chart innerRadius={50} size={180} />
                     </PolarChart>
                   </TouchableOpacity>
+
+                  
               )
             }
             { !viewFullPolarChart ? (
-              <SafeAreaView style={styles.datas}>
+              <View style={styles.datas}>
               {categoriasComValor.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
                   <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
@@ -232,37 +232,35 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
                   <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{mostrarValores ? formatarValor(item.valor) : '*****'}</Text>
                 </View>
               ))}
-            </SafeAreaView>
+            </View>
             ) : (
-              <FlatList 
-                data={dataCaregoriaOrdenada}
-                contentContainerStyle={styles.datas}
-                keyExtractor={(item) => item.id.toString()} 
-                renderItem={({ item }) => (
-                  <View style={{ 
-                    flexDirection: 'row', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    width: '100%', 
-                    paddingVertical: 5, 
-                  }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                      <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
-                      <Text 
-                        style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}
-                        numberOfLines={1} 
-                        ellipsizeMode="tail"
-                      >
-                        {item.titulo.length > 10 ? item.titulo.slice(0,10) + '.' : item.titulo}
-                      </Text>
+              <View style={styles.datas2}>
+                {dataCaregoriaOrdenada.map((item, index) => {
+                  const tituloExibido = item.titulo.length > 16 ? `${item.titulo.slice(0, 16)}...` : item.titulo;
+                  const porcentagem = totalvalueCat > 0 ? ((item.valor / totalvalueCat) * 100).toFixed(1) : '0.0';
+
+                  return (
+                    <View
+                      key={item.id || index}
+                      style={styles.itemContainer}
+                    >
+                        <View style={styles.itemLeft}>
+                          <View style={[styles.colorDot, { backgroundColor: item.cor }]} />
+                          <Text style={styles.tituloText} numberOfLines={1} ellipsizeMode="tail">
+                            {tituloExibido}
+                          </Text>
+                        </View>
+
+                        <View style={styles.itemRight}>
+                          <Text style={styles.valorText}>
+                            {mostrarValores ? formatarValor(item.valor) : '*****'}
+                          </Text>
+                          <Text style={styles.porcentagemText}>{porcentagem}%</Text>
+                          </View>
+                        </View>
+                        );
+                      })}
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15, minWidth: 120, justifyContent: 'flex-end' }}>
-                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{mostrarValores ? formatarValor(item.valor) : '*****'}</Text>
-                      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{((item.valor / totalvalueCat) * 100).toFixed(1) }%</Text>
-                    </View>
-                  </View>
-                )}
-              />
             )
               
             }
@@ -270,8 +268,9 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
           </TouchableOpacity>
         )
       }
-      </ScrollView>
-       <BtnEntradaSaida />
+      </View>
+       </ScrollView>
+       <BtnEntradaSaida/>
     </View>
   );
 }
@@ -334,10 +333,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    height: 200,
     backgroundColor: '#fff',
     paddingHorizontal: 20,
     marginTop: 10,
+    height: 200,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  graphContainer2: {
+    flexDirection: "column",
+    height: "auto",
+    alignItems: "center",
+    backgroundColor: "#FFF",
     borderRadius: 25,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -354,5 +367,68 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'center',
     gap: 15,
-  }
+  },
+  datas2: {
+  width: '100%',
+  paddingHorizontal: 10,
+  paddingBottom: 20,
+  gap: 8,
+},
+
+itemContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%',
+  paddingVertical: 6,
+  backgroundColor: '#FFF',
+  borderRadius: 12,
+  paddingHorizontal: 12,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 1,
+},
+
+itemLeft: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  flex: 1,
+},
+
+colorDot: {
+  width: 10,
+  height: 10,
+  borderRadius: 5,
+  marginRight: 10,
+},
+
+tituloText: {
+  fontSize: 15,
+  fontWeight: '600',
+  color: '#444',
+  maxWidth: 120,
+},
+
+itemRight: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  minWidth: 120,
+  gap: 12,
+},
+
+valorText: {
+  fontSize: 15,
+  fontWeight: 'bold',
+  color: '#000',
+},
+
+porcentagemText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#004880',
+},
+
 });

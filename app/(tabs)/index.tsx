@@ -5,10 +5,10 @@ import { toggleVisibilidade } from '@/store/visibilidadeSlice';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from "react";
-import { ActivityIndicator, InteractionManager, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
-import { Pie, PolarChart } from 'victory-native';
+import { Pie, PolarChart } from "victory-native";
 
 export function formatarValor(valorEmCentavos: number): string {
   const valorEmReais = valorEmCentavos / 100;
@@ -18,24 +18,33 @@ export function formatarValor(valorEmCentavos: number): string {
   });
 }
 
-
 export default function Home() {
+  const transactionDatabase = useTransactionDatabase();
+  const dispatch = useDispatch();
 
-const transactionDatabase = useTransactionDatabase();
+  const [ready, setReady] = useState(false);
+  const [dataGrafico, setDataGrafico] = useState<any[]>([]);
 
+  const datasOrdenadas = [...dataGrafico].sort((a, b) => b.value - a.value);
 
-const dispatch = useDispatch();
-
-const [ready, setReady] = useState(false);
-const [disabledState, setDisabledState] = useState(false);
-const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
 
   useFocusEffect(
-  useCallback(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      const carregarSaldos = async () => {
-        const newDataCategoria = await transactionDatabase.GetSomaPorCategoria();
-        dispatch({ type: 'dataCategoria/setDataCategoria', payload: newDataCategoria });
+    useCallback(() => {
+      const carregarDados = async () => {
+        setReady(false);
+        
+        const todasCategorias = await transactionDatabase.GetSomaPorCategoria();
+        dispatch({ type: 'dataCategoria/setDataCategoria', payload: todasCategorias });
+
+        const despesasPorCategoria = await transactionDatabase.GetSomaPorCategoria();
+        const graficoData = despesasPorCategoria
+          .filter(item => item.valor > 0)
+          .map(item => ({
+            label: item.titulo,
+            value: item.valor,
+            color: item.cor,
+          }));
+        setDataGrafico(graficoData);
 
         const newTotal = await transactionDatabase.GetTotalValue();
         dispatch({ type: 'total/setTotal', payload: newTotal });
@@ -49,386 +58,259 @@ const [viewFullPolarChart, serViewFullPolarChart] = useState(false)
         setReady(true);
       };
 
-      carregarSaldos();
-    });
-
-    return () => task.cancel();
-  }, [])
-);
+      carregarDados();
+    }, [])
+  );
 
   const total = useSelector((state: RootState) => state.total.value);
-  const Receitas = useSelector((state: RootState) => state.receitas.value);
-  const Despesas = useSelector((state: RootState) => state.despesas.value);
-  const dataCaregoria = useSelector((state: RootState) => state.dataCategoria.lista);
+  const receitas = useSelector((state: RootState) => state.receitas.value);
+  const despesas = useSelector((state: RootState) => state.despesas.value);
   const mostrarValores = useSelector((state: RootState) => state.visibilidade.mostrarValores);
-
-
-  function handleRemoveTransactions() {
-    transactionDatabase.DeleteAllTransactions();
-    transactionDatabase.DeleteAllCategoria();
-    dispatch({ type: 'total/setTotal', payload: 0 });
-    dispatch({ type: 'receitas/setReceitas', payload: 0 });
-    dispatch({ type: 'despesas/setDespesas', payload: 0 });
-    dispatch({ type: 'dataCategoria/setDataCategoria', payload: []});
-  }
-
-    const dataCaregoriaOrdenada = [...dataCaregoria].sort((a, b) => b.valor - a.valor);
-    const topCategorias = dataCaregoriaOrdenada.slice(0, 3); 
-    const outras = dataCaregoriaOrdenada.slice(3);       
-
-    const totalvalueCat = dataCaregoria.reduce((acc, item) => acc + item.valor, 0)
-
-    const outrasSoma = outras.reduce((acc, item) => acc + item.valor, 0);
-
-    const categoriasFinal = [...topCategorias];
-    if (outrasSoma > 0) {
-      categoriasFinal.push({
-        id: 0,
-        titulo: 'Outras',
-        valor: outrasSoma,
-        cor: '#A9A9A9',
-      });
-    }
-
-    const dataGrafico = categoriasFinal.map(item => ({
-      label: item.titulo,
-      value: item.valor,
-      color: item.cor,
-    }));
-
-    const dataGrafico2 = dataCaregoria.map(item => ({
-      label: item.titulo,
-      value: item.valor,
-      color: item.cor,
-    }));
-
-    const categoriasComValor = categoriasFinal.filter(item => item.valor > 0);
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-      <View style={styles.header}>
-        <View style={styles.status}>
-          <Text style={styles.side}>Home</Text>
-
-          <View style={styles.centerContainer}>
-            <Feather name='chevron-left' size={20} color={'black'} />
-            <Text style={styles.title}>Maio</Text>
-            <Feather name='chevron-right' size={20} color={'black'} />
-          </View>
-          <TouchableOpacity onPress={handleRemoveTransactions} disabled={true} style={styles.avatar}>
-            <Feather name='user-x' size={25} />
-          </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Olá, Bem-vindo!</Text>
+          <Text style={styles.headerSubtitle}>Este é o resumo da sua carteira</Text>
         </View>
 
-        <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: 10 }}>
-          <Text style={{ fontWeight: "600", fontSize: 15, color: "#696969" }}>Saldo Total</Text>
-          <Text style={{ fontWeight: "bold", fontSize: 30 }}>{mostrarValores ? formatarValor(total) : '*****'}</Text>
-
-          <TouchableOpacity onPress={() => dispatch(toggleVisibilidade())} style={{ width: 40, height: 30, alignItems: 'center', justifyContent: 'center', borderColor: '#696969' }}>
-            { mostrarValores ? ( 
-              <Feather name="eye" size={20} color="#A9A9A9" style={{ marginTop: 10 }} />
-            ) : ( 
-              <Feather name="eye-off" size={20} color="#A9A9A9" style={{ marginTop: 10 }} />
-            ) 
-            } 
-          </TouchableOpacity>
-
-          
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 12 }}>
-             
-             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-down' size={30} color={'#DC143C'} />
-                </View>
-                <View>
-                  <Text style={{ fontSize: 15, fontWeight: "bold" }}>Despesas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Despesas): '*****'}</Text>
-                </View>
-              </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10}}>
-                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <Feather name='arrow-up' size={30} color={'#008000'} />
-                </View>
-                <View>
-                  <Text style={{ fontSize: 15, fontWeight: "bold" }}>Receitas</Text>
-                  <Text style={{ fontSize: 20, fontWeight: "500", color: "#004880" }}>{mostrarValores ? formatarValor(Receitas) : '*****'}</Text>
-                </View>
+        <View style={styles.balanceCard}>
+          <View style={styles.balanceHeader}>
+            <Text style={styles.balanceTitle}>Saldo Total</Text>
+            <TouchableOpacity onPress={() => dispatch(toggleVisibilidade())}>
+              <Feather name={mostrarValores ? "eye" : "eye-off"} size={24} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.balanceValue}>
+            {mostrarValores ? formatarValor(total) : 'R$ •••••'}
+          </Text>
+          <View style={styles.incomeExpenseContainer}>
+            <View style={styles.incomeExpenseBox}>
+              <Feather name="arrow-up-circle" size={24} color="#00A86B" />
+              <View>
+                <Text style={styles.incomeExpenseLabel}>Receitas</Text>
+                <Text style={styles.incomeValue}>
+                  {mostrarValores ? formatarValor(receitas) : 'R$ •••••'}
+                </Text>
               </View>
             </View>
-        </View>
-      </View>
-      
-      <View style={{
-        backgroundColor: "#004880", 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        marginTop: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.,
-        shadowRadius: 8,
-        elevation: 5,
-        }}>
-        <Text style={{color: '#F2F2F2', fontSize: 16, fontStyle: 'italic', padding: 5}}>
-          New: funcionalidade de gastos futuros em breve...
-        </Text>
-      </View>
-
-      <Text style={{ fontSize: 20, fontWeight: "bold", paddingVertical: 20, paddingHorizontal: 10, paddingBottom: 5, color: "#696969" }}>Despesas por categoria</Text>
-      <View style={{ paddingHorizontal: 20, paddingBottom: 80 }}>
-      {
-        !ready ? (
-          <View style={{ marginTop: 20, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#004880" />
-            <Text style={{ marginTop: 10, color: '#A9A9A9', fontSize: 14 }}>Carregando...</Text>
+            <View style={styles.incomeExpenseBox}>
+              <Feather name="arrow-down-circle" size={24} color="#E53935" />
+              <View>
+                <Text style={styles.incomeExpenseLabel}>Despesas</Text>
+                <Text style={styles.expenseValue}>
+                  {mostrarValores ? formatarValor(despesas) : 'R$ •••••'}
+                </Text>
+              </View>
+            </View>
           </View>
-        )
-        : !(categoriasComValor.length > 0) ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
-            <Text style={{ fontSize: 16, textAlign: 'center', color: '#A9A9A9' }}>
-              Não há dados de despesas
-            </Text>
+        </View>
+        <Text style={styles.sectionTitle}>Despesas por Categoria</Text>
+
+        {!ready ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#004880" />
+            <Text style={styles.loadingText}>Carregando dados...</Text>
+          </View>
+        ) : dataGrafico.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Feather name="pie-chart" size={40} color="#CCC" />
+            <Text style={styles.emptyText}>Sem dados de despesas para exibir.</Text>
           </View>
         ) : (
-          <TouchableOpacity 
-            onPress={()=> (serViewFullPolarChart(true), setDisabledState(true))}
-            style={[viewFullPolarChart ? styles.graphContainer2 : styles.graphContainer]}
-            disabled={disabledState}>
-            {
-              !viewFullPolarChart ? (
-                <View style={{ height: 100, width: 100}}>
-                  <PolarChart
-                    data={dataGrafico}
-                    labelKey={"label"}
-                    valueKey={"value"}
-                    colorKey={"color"}
-                  >
-                    <Pie.Chart innerRadius={30} />
-                  </PolarChart>
-                </View>
-              ) : (
-                  <TouchableOpacity onPress={()=> (serViewFullPolarChart(false), setDisabledState(false))} style={{ height: 200, width: 200}}>
-                    <PolarChart
-                      data={dataGrafico2}
-                      labelKey={"label"}
-                      valueKey={"value"}
-                      colorKey={"color"}
-                    >
-                      <Pie.Chart innerRadius={50} size={180} />
-                    </PolarChart>
-                  </TouchableOpacity>
-
-                  
-              )
-            }
-            { !viewFullPolarChart ? (
-              <View style={styles.datas}>
-              {categoriasComValor.map((item, index) => (
-                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '80%' }}>
-                  <View style={{ width: 10, height: 10, backgroundColor: item.cor, borderRadius: 10, marginRight: 10 }} />
-                  <Text style={{ fontSize: 16, color: "#696969", fontWeight: '600' }}>{item.titulo.length > 7 ? item.titulo.slice(0,7) + '.' : item.titulo} </Text>
-                  <Text style={{ fontSize: 16, marginLeft: 'auto', fontWeight: 'bold' }}>{mostrarValores ? formatarValor(item.valor) : '*****'}</Text>
-                </View>
-              ))}
+          <View style={styles.chartContainer}>
+            <View style={styles.chartWrapper}>
+              <PolarChart
+                data={dataGrafico} 
+                labelKey={"label"} 
+                valueKey={"value"} 
+                colorKey={"color"} 
+              >
+                <Pie.Chart innerRadius={50}/>
+              </PolarChart>
             </View>
-            ) : (
-              <View style={styles.datas2}>
-                {dataCaregoriaOrdenada.map((item, index) => {
-                  const tituloExibido = item.titulo.length > 16 ? `${item.titulo.slice(0, 16)}...` : item.titulo;
-                  const porcentagem = totalvalueCat > 0 ? ((item.valor / totalvalueCat) * 100).toFixed(1) : '0.0';
-
-                  return (
-                    <View
-                      key={item.id || index}
-                      style={styles.itemContainer}
-                    >
-                        <View style={styles.itemLeft}>
-                          <View style={[styles.colorDot, { backgroundColor: item.cor }]} />
-                          <Text style={styles.tituloText} numberOfLines={1} ellipsizeMode="tail">
-                            {tituloExibido}
-                          </Text>
-                        </View>
-
-                        <View style={styles.itemRight}>
-                          <Text style={styles.valorText}>
-                            {mostrarValores ? formatarValor(item.valor) : '*****'}
-                          </Text>
-                          <Text style={styles.porcentagemText}>{porcentagem}%</Text>
-                          </View>
-                        </View>
-                        );
-                      })}
+            <View style={styles.legendContainer}>
+              {datasOrdenadas.map((item, index) => {
+                const percentage = despesas > 0 ? (item.value / despesas) * 100 : 0;
+                return (
+                  <View key={index} style={styles.legendItem}>
+                    <View style={styles.legendLeft}>
+                      <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                      <Text style={styles.legendText}>{item.label}</Text>
                     </View>
-            )
-              
-            }
-            
-          </TouchableOpacity>
-        )
-      }
-      </View>
-       </ScrollView>
-       <BtnEntradaSaida/>
+                    <View style={styles.legendRight}>
+                      <Text style={styles.legendValue}>
+                        {mostrarValores ? formatarValor(item.value) : 'R$ •••••'}
+                      </Text>
+                      {mostrarValores && (
+                        <Text style={styles.legendPercentage}>
+                          {percentage.toFixed(2)}%
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+      </ScrollView>
+      <BtnEntradaSaida />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#F7F7FC",
     flex: 1,
+    backgroundColor: '#F7F8FA',
+  },
+  scrollContainer: {
+    paddingBottom: 80,
   },
   header: {
-    backgroundColor: '#FFF',
-    paddingHorizontal: 15,
-    height: 250,
-    borderRadius: 25,
+    backgroundColor: '#004880',
+    padding: 20,
+    paddingTop: 50,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#E0E0E0',
+    marginTop: 4,
+  },
+  balanceCard: {
+    backgroundColor: '#005A9C',
+    margin: 20,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 5,
   },
-  status: {
+  balanceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  balanceTitle: {
+    color: '#FFF',
+    fontSize: 16,
+  },
+  balanceValue: {
+    color: '#FFF',
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  incomeExpenseContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingTop: 16,
+  },
+  incomeExpenseBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  incomeExpenseLabel: {
+    color: '#E0E0E0',
+    fontSize: 14,
+  },
+  incomeValue: {
+    color: '#00A86B',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  expenseValue: {
+    color: '#E53935',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginHorizontal: 20,
+    marginBottom: 10,
+  },
+  loadingContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#999',
+  },
+  emptyContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  chartContainer: {
+    backgroundColor: '#FFF',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  chartWrapper: {
+    height: 180,
+  },
+  legendContainer: {
+    marginTop: 20,
+  },
+  legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
-    padding: 10,
+    marginBottom: 16,
   },
-  side: {
-    color: '#000',
-    fontSize: 20,
-    width: 55,
-    fontWeight: 'bold',
-  },
-  centerContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-    alignItems: 'center',
-  },
-  title: {
-    fontWeight: 'semibold',
-    fontFamily: 'Inter',
-    fontSize: 20,
-    textDecorationColor: '#000',
-    textDecorationLine: 'line-through',
-    color: '#000'
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#696969',
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  graphContainer: {
-    gap: 10,
+  legendLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    marginTop: 10,
-    height: 200,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    gap: 10,
   },
-  graphContainer2: {
-    flexDirection: "column",
-    height: "auto",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+  legendRight: {
+    alignItems: 'flex-end',
   },
-  datas: {
-    flexDirection: 'column',
-    height: '100%',
-    padding: 10,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    gap: 15,
+  legendColor: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
-  datas2: {
-  width: '100%',
-  paddingHorizontal: 10,
-  paddingBottom: 20,
-  gap: 8,
-},
-
-itemContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  width: '100%',
-  paddingVertical: 6,
-  backgroundColor: '#FFF',
-  borderRadius: 12,
-  paddingHorizontal: 12,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.05,
-  shadowRadius: 4,
-  elevation: 1,
-},
-
-itemLeft: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  flex: 1,
-},
-
-colorDot: {
-  width: 10,
-  height: 10,
-  borderRadius: 5,
-  marginRight: 10,
-},
-
-tituloText: {
-  fontSize: 15,
-  fontWeight: '600',
-  color: '#444',
-  maxWidth: 120,
-},
-
-itemRight: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  minWidth: 120,
-  gap: 12,
-},
-
-valorText: {
-  fontSize: 15,
-  fontWeight: 'bold',
-  color: '#000',
-},
-
-porcentagemText: {
-  fontSize: 14,
-  fontWeight: '600',
-  color: '#004880',
-},
-
+  legendText: {
+    fontSize: 15,
+    color: '#333',
+    fontWeight: '500',
+  },
+  legendValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+  },
+  legendPercentage: {
+    fontSize: 13,
+    color: '#777',
+  },
 });

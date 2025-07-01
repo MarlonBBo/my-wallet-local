@@ -1,13 +1,20 @@
 import { initializeDatabase } from '@/database/initializeDatabase';
 import { store } from '@/store';
+import * as NavigationBar from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 
 export default function Layout() {
+
+  useEffect(() => {
+      NavigationBar.setButtonStyleAsync('light');
+    }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
@@ -22,24 +29,22 @@ export default function Layout() {
               name="(tabs)"
               options={{ 
                 headerShown: false,
-                animation: 'slide_from_right',
-               }} 
+                animation: 'fade',
+               }}
             />
 
-            <Stack.Screen 
+            <Stack.Screen
               name="entrada"
-              options={{ 
+              options={{
                 headerShown: false,
-                animation: 'fade_from_bottom',
                 presentation: 'modal'
-               }} 
+               }}
             />
 
-            <Stack.Screen 
+            <Stack.Screen
               name="saida"
-              options={{ 
+              options={{
                 headerShown: false,
-                animation: 'fade_from_bottom',
                 presentation: 'modal'
                }} 
             />

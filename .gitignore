@@ -38,3 +38,4 @@ yarn-error.*
 
 app-example
 android/app/release/app-release.apk
+android/app/debug/app-debug.apk

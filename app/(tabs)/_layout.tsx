@@ -18,7 +18,6 @@ export default function TabLayout() {
         options={{
           title: 'home',
           headerShown: false,
-          animation:'fade',
           tabBarIcon: ({ color }) => <Feather size={25} name="home" color={color} />,
         }}
       />
@@ -26,7 +25,6 @@ export default function TabLayout() {
         name="transaction"
         options={{
           title: 'Trasações',
-          animation: "fade",
           headerShown: false,
           tabBarIcon: ({ color }) => <Feather size={25} name="repeat" color={color} />,
         }}
@@ -36,7 +34,6 @@ export default function TabLayout() {
         name="categorias"
         options={{
           title: 'Categorias',
-          animation: "fade",
           headerShown: false,
           tabBarIcon: ({ color }) => <Feather size={25} name="clipboard" color={color} />,
         }}

@@ -2,7 +2,7 @@ import { useTransactionDatabase } from "@/database/useTransactionDatabase";
 import { deleteTransaction } from "@/store/transactionSlice";
 import { Feather } from "@expo/vector-icons";
 import { useRef } from "react";
-import { Alert, TouchableOpacity } from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { useDispatch } from "react-redux";
 
@@ -65,19 +65,29 @@ export function BtnDeleteTransaction({ transactionId }: { transactionId: number 
   };
 
   return (
-    <TouchableOpacity
-      onPress={handleDeleteTransaction}
-      style={{
-        width: 50,
-        height: '88%',
-        backgroundColor: '#C2185B',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        marginLeft: 5
-      }}
-    >
-      <Feather name="trash-2" size={20} color="white" />
-    </TouchableOpacity>
+    <View style={styles.container}>
+      <TouchableOpacity
+        onPress={handleDeleteTransaction}
+        style={styles.button}
+      >
+        <Feather name="trash-2" size={22} color="white" />
+      </TouchableOpacity>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+  },
+  button: {
+    backgroundColor: '#C2185B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 60,
+    height: '100%',
+    borderRadius: 12,
+  },
+});

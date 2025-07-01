@@ -2,7 +2,6 @@ import { useTransactionDatabase } from "@/database/useTransactionDatabase";
 import { RootState } from "@/store";
 import { addCategoria, removeCategoria } from "@/store/dataCategoriaSlice";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { FlatList, Swipeable } from "react-native-gesture-handler";
@@ -11,20 +10,23 @@ import { formatarValor } from ".";
 
 export default function Categorias() {
   const coresDisponiveis = [
-    '#FF5252',
-    '#CDDC39',
-    '#00BCD4',
-    '#7C4DFF',
-    '#EC407A',
-    '#AB47BC',
-    '#66BB6A',
-    '#FFEB3B',
-    '#42A5F5',
-    '#FF8A65',
-  ];
+  '#F44336',
+  '#E91E63',
+  '#9C27B0',
+  '#673AB7',
+  '#3F51B5',
+  '#03A9F4',
+  '#00BCD4',
+  '#009688',
+  '#4CAF50',
+  '#8BC34A',
+  '#FFEB3B',
+  '#FF9800',
+  '#FF5722',
+];
+
 
   const dispatch = useDispatch();
-  const router = useRouter();
   const transactionDatabase = useTransactionDatabase();
 
   const [novaCategoria, setNovaCategoria] = useState('');
@@ -69,6 +71,8 @@ export default function Categorias() {
       cor: cor,
       valor: 0,
     };
+
+    console.log(nova)
 
     const resultado = await transactionDatabase.CreateCategoria(nova);
     dispatch(addCategoria(resultado));
@@ -132,48 +136,39 @@ export default function Categorias() {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={30} color="#FFF" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Categorias</Text>
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.inputContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ paddingHorizontal: 20 }}
       >
-        <TextInput
-          placeholder="Nome da categoria"
-          placeholderTextColor="#999"
-          style={styles.input}
-          value={novaCategoria}
-          onChangeText={setNovaCategoria}
-        />
-      
-          <TouchableOpacity onPress={() => (adicionarCategoria(), Keyboard.dismiss())} style={{
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 5,
-            borderColor: "#004880",
-            borderWidth: 1,
-            padding: 8,
-            borderRadius: 8,
-            flexDirection: "row"
-          }}>
-            <Text style={{
-              fontSize: 15,
-              fontWeight: "bold",
-              color: "#004880"
-            }}>Criar categoria</Text>
-            <Feather name="plus" size={20} color={"#044880"}/>
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Nome da categoria"
+            placeholderTextColor="#999"
+            style={styles.input}
+            value={novaCategoria}
+            onSubmitEditing={adicionarCategoria}
+            returnKeyType="done"
+            onChangeText={setNovaCategoria}
+          />
+          <TouchableOpacity
+            onPress={() => (adicionarCategoria(), Keyboard.dismiss())}
+            style={styles.addButton}
+          >
+            <Text style={styles.addButtonText}>Criar</Text>
+            <Feather name="plus" size={20} color="#FFF" />
           </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
 
       {dataCategoriaOrdenada.length === 0 ? (
-        <Text style={styles.emptyText}>Nenhuma Categoria cadastrada</Text>
+        <View style={styles.emptyContainer}>
+          <Feather name="folder" size={40} color="#CCC" />
+          <Text style={styles.emptyText}>Nenhuma categoria cadastrada</Text>
+        </View>
       ) : (
         <FlatList
           data={dataCategoriaOrdenada}
@@ -182,37 +177,34 @@ export default function Categorias() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <Swipeable
-              containerStyle={{ borderRadius: 2 }}
               ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
               renderRightActions={() => (
-                <TouchableOpacity
-                  onPress={() => deleteCategoria(item.id)}
-                  style={{
-                    width: 50,
-                    height: '80%',
-                    backgroundColor: '#C2185B',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: 10,
-                  }}
-                >
-                  <Feather name="trash-2" size={20} color="white" />
-                </TouchableOpacity>
+                <View style={styles.deleteActionContainer}>
+                  <TouchableOpacity
+                    onPress={() => deleteCategoria(item.id)}
+                    style={styles.deleteButton}
+                  >
+                    <Feather name="trash-2" size={22} color="white" />
+                  </TouchableOpacity>
+                </View>
               )}
               overshootRight={false}
+              containerStyle={styles.swipeableContainer}
             >
               <TouchableOpacity
                 onPress={() => abrirAcoes(item.id)}
                 activeOpacity={10}
+                style={styles.categoriaTouchable}
               >
-                <View style={[
-                  styles.categoriaItem,
-                  { backgroundColor: "#FFF", borderWidth: 2, borderColor: item.cor }
-                ]}>
-                  <Text style={styles.categoriaText}>
-                    {item.titulo} - {mostrarValores ? formatarValor(item.valor) : "*****"}
-                  </Text>
-                  <Feather name="chevron-left" size={20} color="black" />
+                <View style={styles.categoriaItem}>
+                  <View style={[styles.colorIndicator, { backgroundColor: item.cor }]} />
+                  <View style={styles.categoriaInfo}>
+                    <Text style={styles.categoriaText}>{item.titulo}</Text>
+                    <Text style={styles.categoriaValor}>
+                      {mostrarValores ? formatarValor(item.valor) : 'R$ •••••'}
+                    </Text>
+                  </View>
+                  <Feather name="chevron-left" size={24} color="#CCC" />
                 </View>
               </TouchableOpacity>
             </Swipeable>
@@ -223,121 +215,124 @@ export default function Categorias() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F2',
-    gap: 10,
-
+    backgroundColor: '#F7F8FA',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 30,
-    padding: 16,
+    paddingTop: 40,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
     backgroundColor: '#004880',
-  },
-  backButton: {
-    marginRight: 12,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#FFF',
+    textAlign: 'center',
   },
   inputContainer: {
+    marginTop: 20,
     padding: 16,
-    
+    borderRadius: 16,
+    backgroundColor: '#FFF',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   input: {
-    height: 48,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    height: 50,
+    backgroundColor: '#F7F8FA',
+    borderRadius: 10,
+    paddingHorizontal: 15,
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#DDD',
-  },
-  corPreview: {
-    height: 48,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  corText: {
-    color: '#FFF',
-    fontWeight: 'bold',
+    borderColor: '#EFEFEF',
   },
   addButton: {
     backgroundColor: '#004880',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 10,
+    paddingVertical: 14,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    gap: 8,
+  },
+  addButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   listContainer: {
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  swipeableContainer: {
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  deleteActionContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+  },
+  deleteButton: {
+    backgroundColor: '#C2185B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 60,
+    height: '100%',
+    borderRadius: 12,
+  },
+  categoriaTouchable: {
+    borderRadius: 12,
+    backgroundColor: '#FFF',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   categoriaItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+  },
+  colorIndicator: {
+    width: 6,
+    height: '100%',
+    borderRadius: 3,
+    marginRight: 16,
+  },
+  categoriaInfo: {
+    flex: 1,
   },
   categoriaText: {
     fontSize: 16,
-    color: "#000",
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#333',
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#000000AA',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  colorPickerContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 9,
-    borderRadius: 12,
-    justifyContent: 'center',
-    maxWidth: '100%',
-  },
-  colorCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    margin: 8,
-    borderWidth: 2,
-    borderColor: '#FFF',
-  },
-  colorCircleSelected: {
-    borderColor: '#004880',
-    borderWidth: 3,
-  },
-  fecharModal: {
-    backgroundColor: '#FFF',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-    width: 120,
-    alignItems: 'center',
-  },
-  fecharTexto: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#7C4DFF',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
-    color: '#999',
+  categoriaValor: {
+    fontSize: 14,
+    color: '#777',
+    marginTop: 4,
   },
 });

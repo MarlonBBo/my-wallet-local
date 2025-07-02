@@ -21,15 +21,3 @@ export async function initializeDatabase(database: SQLiteDatabase) {
     );
   `);
 }
-
-
-export async function resetDatabase(database: SQLiteDatabase) {
-  // Deleta as tabelas (se existirem)
-  await database.execAsync(`
-    DROP TABLE IF EXISTS transactions;
-    DROP TABLE IF EXISTS categorias;
-  `);
-
-  // Recria as tabelas
-  await initializeDatabase(database);
-}

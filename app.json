@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "MWlocal",
+    "name": "my-wallet-local",
     "slug": "my-wallet-local",
-    "version": "1.0.2",
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splash-icon.png",
     "scheme": "mywalletlocal",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -17,8 +17,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#004880"
+        "foregroundImage": "./assets/images/splash-icon.png",
+        "backgroundColor": "#000"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.m4rlon_b4rreto.mywalletlocal"
@@ -26,16 +26,16 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/splash-icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon.png",
+          "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#004880"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       "expo-sqlite"
@@ -48,7 +48,7 @@
       "eas": {
         "projectId": "b2a11753-4783-416c-afc9-3e8fb568e90f"
       }
+    }
     },
     "owner": "m4rlon_b4rreto"
   }
-}

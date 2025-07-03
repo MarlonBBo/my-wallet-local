@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function BtnEntradaSaida() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,13 +17,13 @@ export default function BtnEntradaSaida() {
     setIsOpen(!isOpen);
   };
 
-  const entradaSaidaStyle = {
+  const entradaStyle = {
     transform: [
       { scale: animation },
       {
-        translateY: animation.interpolate({
+        translateX: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -60],
+          outputRange: [0, -85],
         }),
       },
     ],
@@ -33,9 +33,9 @@ export default function BtnEntradaSaida() {
     transform: [
       { scale: animation },
       {
-        translateY: animation.interpolate({
+        translateX: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -120],
+          outputRange: [0, -190],
         }),
       },
     ],
@@ -56,16 +56,24 @@ export default function BtnEntradaSaida() {
     <View style={styles.container}>
       <TouchableOpacity
         style={[styles.button, styles.secondary, saidaStyle]}
-        onPress={() => router.push('/saida')}
+        onPress={() => {
+          router.push('/saida');
+          toggleMenu();
+        }}
       >
         <Feather name="arrow-up" size={20} color="#FFF" />
+        <Text style={styles.buttonText}>Saída</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, styles.secondary, entradaSaidaStyle]}
-        onPress={() => router.push('/entrada')}
+        style={[styles.button, styles.secondary, entradaStyle]}
+        onPress={() => {
+          router.push('/entrada');
+          toggleMenu();
+        }}
       >
         <Feather name="arrow-down" size={20} color="#FFF" />
+        <Text style={styles.buttonText}>Entrada</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={[styles.button, styles.menu]} onPress={toggleMenu}>
@@ -98,14 +106,23 @@ const styles = StyleSheet.create({
   },
   menu: {
     backgroundColor: '#004880',
-
   },
   secondary: {
-    flexDirection: "row",
     position: 'absolute',
-    backgroundColor: '#004880',
-    width: 48,
+    backgroundColor: '#005A9C',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 100,
     height: 48,
+    bottom: 5,
     borderRadius: 24,
+    paddingHorizontal: 15,
+    gap: 5,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

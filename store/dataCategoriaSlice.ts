@@ -3,26 +3,16 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface DataCategoriaState {
   lista: CategoriaProps[];
-  oneCategoria: CategoriaProps;
 }
 
 const initialState: DataCategoriaState = {
-  lista: [],
-  oneCategoria: {
-    id: 0,
-    titulo: '',
-    cor: '#000000',
-    valor: 0,
-  },
+  lista: []
 };
 
 const dataCategoriaSlice = createSlice({
   name: 'dataCategoria',
   initialState,
   reducers: {
-    setOneCategoria(state, action: PayloadAction<CategoriaProps>) {
-      state.oneCategoria = action.payload;
-    },
     setDataCategoria(state, action: PayloadAction<CategoriaProps[]>) {
       state.lista = action.payload;
     },
@@ -35,5 +25,5 @@ const dataCategoriaSlice = createSlice({
   },
 });
 
-export const { setDataCategoria, addCategoria, removeCategoria, setOneCategoria } = dataCategoriaSlice.actions;
+export const { setDataCategoria, addCategoria, removeCategoria } = dataCategoriaSlice.actions;
 export default dataCategoriaSlice.reducer;

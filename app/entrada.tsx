@@ -76,7 +76,7 @@ export default function Entrada() {
         <TouchableOpacity onPress={()=> router.push('/(tabs)')}>
           <Feather name="x" size={30} color="#000" />
         </TouchableOpacity>
-        <Text style={{fontWeight: "bold", fontSize: 25, textDecorationLine:'underline'}}>Entrada</Text>
+        <Text style={{fontWeight: "bold", fontSize: 25}}>Entrada</Text>
         
       </View>
 
@@ -92,6 +92,7 @@ export default function Entrada() {
         onChangeText={handleChange}
         placeholder="R$ 0,00"
         placeholderTextColor="#999"
+        onSubmitEditing={() => handleAddTransaction()}
       />
 
 

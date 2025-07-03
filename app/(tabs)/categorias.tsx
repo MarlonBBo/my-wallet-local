@@ -177,7 +177,8 @@ export default function Categorias() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <Swipeable
-              ref={(ref) => { swipeableRefs.current[item.id] = ref; }}
+              // @ts-ignore
+              ref={(ref: Swipeable | null) => { swipeableRefs.current[item.id] = ref; }}
               renderRightActions={() => (
                 <View style={styles.deleteActionContainer}>
                   <TouchableOpacity

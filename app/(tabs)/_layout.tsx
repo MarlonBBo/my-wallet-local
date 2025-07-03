@@ -38,6 +38,15 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Feather size={25} name="clipboard" color={color} />,
         }}
       />
+
+      <Tabs.Screen
+        name="annotation"
+        options={{
+          title: 'Anotações',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Feather size={25} name="edit" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

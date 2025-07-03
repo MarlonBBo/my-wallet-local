@@ -27,7 +27,6 @@ export default function Home() {
 
   const datasOrdenadas = [...dataGrafico].sort((a, b) => b.value - a.value);
 
-
   useFocusEffect(
     useCallback(() => {
       const carregarDados = async () => {

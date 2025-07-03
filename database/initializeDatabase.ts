@@ -20,4 +20,22 @@ export async function initializeDatabase(database: SQLiteDatabase) {
       FOREIGN KEY (category_id) REFERENCES categorias(id) ON DELETE CASCADE
     );
   `);
+
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS anotacoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      mes TEXT NOT NULL
+    );
+  `);
+
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS anotacao_itens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      anotacao_id INTEGER NOT NULL,
+      conteudo TEXT NOT NULL,
+      valor INTEGER NOT NULL,
+      FOREIGN KEY (anotacao_id) REFERENCES anotacoes(id) ON DELETE CASCADE
+    );
+  `);
+
 }

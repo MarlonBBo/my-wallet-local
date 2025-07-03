@@ -18,7 +18,7 @@ export default function Layout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
-        <SQLiteProvider databaseName="mydatabase.db" onInit={initializeDatabase}>
+        <SQLiteProvider databaseName="mydatabase.db" onInit={initializeDatabase} children={
           <SafeAreaView style={{backgroundColor: "#004880", flex: 1}} edges={['bottom', 'top']}>
             <StatusBar 
               style="light"
@@ -48,9 +48,17 @@ export default function Layout() {
                 presentation: 'modal'
                }} 
             />
+
+            <Stack.Screen
+              name="anotacao"
+              options={{
+                headerShown: false,
+                presentation: 'modal'
+               }}
+            />
           </Stack>
           </SafeAreaView>
-        </SQLiteProvider>
+        }/>
       </Provider>
     </GestureHandlerRootView>
   );

@@ -56,7 +56,7 @@ export default function Transaction() {
             const isEntrada = item.type === 'entrada';
             const cor = isEntrada ? '#00A86B' : '#E53935';
             const iconName = isEntrada ? 'arrow-down-left' : 'arrow-up-right';
-            const titulo = isEntrada ? 'Entrada' : item.category?.titulo;
+            const titulo = isEntrada ? item.titleEntrada : item.category.titulo ;
 
             return (
               <Swipeable

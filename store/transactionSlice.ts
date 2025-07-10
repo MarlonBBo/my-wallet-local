@@ -4,6 +4,7 @@ export interface TransactionProps {
   id: number;
   value: number;
   type: 'entrada' | 'saida';
+  titleEntrada?: string,
   category: { id: number; titulo: string };
   date: string;
 }
@@ -16,7 +17,6 @@ interface ValorState {
   value: number;
 }
 
-// --- Estado inicial de cada slice ---
 const initialTransactionState: TransactionState = {
   transactions: [],
 };
@@ -25,7 +25,6 @@ const initialValorState: ValorState = {
   value: 0,
 };
 
-// --- Slice de transações ---
 const transactionSlice = createSlice({
   name: 'transactions',
   initialState: initialTransactionState,
@@ -48,7 +47,6 @@ const transactionSlice = createSlice({
   },
 });
 
-// --- Slice de total ---
 const totalSlice = createSlice({
   name: 'total',
   initialState: initialValorState,
@@ -59,7 +57,6 @@ const totalSlice = createSlice({
   },
 });
 
-// --- Slice de receitas ---
 const receitasSlice = createSlice({
   name: 'receitas',
   initialState: initialValorState,
@@ -70,7 +67,6 @@ const receitasSlice = createSlice({
   },
 });
 
-// --- Slice de despesas ---
 const despesasSlice = createSlice({
   name: 'despesas',
   initialState: initialValorState,

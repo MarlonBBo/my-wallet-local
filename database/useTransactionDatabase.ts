@@ -4,6 +4,7 @@ import { useCallback } from "react";
 export type TransactionProps = {
   id: number;
   category: CategoriaProps;
+  titleEntrada?: string;
   type: 'entrada' | 'saida';
   value: number;
   date: string;
@@ -17,7 +18,8 @@ export type CategoriaProps = {
 };
 
 export type CreateTransactionDTO = {
-  categoryId: number;
+  categoryId?: number;
+  titleEntrada?: string;
   type: 'entrada' | 'saida';
   value: number;
   date: string;
@@ -37,8 +39,8 @@ const QUERIES = {
   `,
   GET_CATEGORIA_BY_ID: "SELECT * FROM categorias WHERE id = ?",
   INSERT_TRANSACTION: `
-    INSERT INTO transactions (category_id, type, value, date)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO transactions (category_id, type, value, date, titleEntrada)
+    VALUES (?, ?, ?, ?, ?)
   `,
   UPDATE_CATEGORIA_VALOR: `
     INSERT INTO categorias (titulo, cor, valor)
@@ -51,6 +53,7 @@ const QUERIES = {
     SELECT 
       t.id, 
       t.value, 
+      t.titleEntrada,
       t.date, 
       t.type, 
       c.id as category_id, 
@@ -181,16 +184,20 @@ export function useTransactionDatabase() {
   const CreateTransaction = async (data: CreateTransactionDTO) => {
     try {
       await db.withTransactionAsync(async () => {
-        await db.runAsync(
+        if(data.type === "saida"){
+          await db.runAsync(
           QUERIES.INSERT_TRANSACTION,
-          [data.categoryId, data.type, data.value, data.date]
+          [data.categoryId ?? null, data.type, data.value, data.date, null]
         );
-
-        if (data.type === 'saida') {
             await db.runAsync(
             `UPDATE categorias SET valor = valor + ? WHERE id = ?`,
-            [data.value, data.categoryId]
+            [data.value, data.categoryId || null]
           );
+        }else{
+          await db.runAsync(
+          QUERIES.INSERT_TRANSACTION,
+          [data.categoryId || null, data.type, data.value, data.date, data.titleEntrada ?? null]
+        );
         }
       });
     } catch (error) {
@@ -208,6 +215,7 @@ export function useTransactionDatabase() {
         value: row.value,
         date: row.date,
         type: row.type,
+        titleEntrada:row.titleEntrada,
         category: {
           id: row.category_id,
           titulo: row.category_titulo,
@@ -250,7 +258,7 @@ export function useTransactionDatabase() {
   const UpdateTransaction = async (id: number, data: CreateTransactionDTO) => {
     try {
       await db.runAsync(QUERIES.UPDATE_TRANSACTION_BY_ID, [
-        data.categoryId,
+        data.categoryId || null,
         data.type,
         data.value,
         data.date,

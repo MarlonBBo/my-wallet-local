@@ -13,7 +13,8 @@ export async function initializeDatabase(database: SQLiteDatabase) {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      category_id INTEGER NOT NULL,
+      category_id INTEGER,
+      titleEntrada TEXT,
       type TEXT CHECK(type IN ('entrada', 'saida')) NOT NULL,
       value INTEGER NOT NULL,
       date TEXT NOT NULL,

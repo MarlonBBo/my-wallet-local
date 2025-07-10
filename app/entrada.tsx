@@ -4,7 +4,7 @@ import { setDataCategoria } from '@/store/dataCategoriaSlice';
 import { setTotal } from '@/store/transactionSlice';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatarValor } from './(tabs)';
@@ -15,9 +15,12 @@ export default function Entrada() {
 
   const dispatch = useDispatch();
   const [valorCentavos, setValorCentavos] = useState(0);
+  const [title, setTitle] = useState('');
 
-    const total = useSelector((state: RootState) => state.total.value);
+  const valorRef = useRef<TextInput>(null);
+  const titleRef = useRef<TextInput>(null);
 
+  const total = useSelector((state: RootState) => state.total.value);
 
   const handleAddTransaction = async () => {
     if (valorCentavos <= 0) {
@@ -25,11 +28,14 @@ export default function Entrada() {
       return;
     }
 
-    const entradaCategoriaPadrao = { id: 0, titulo: 'Entrada', cor: '#00FF00' };
+    if (title.length === 0) {
+      alert('Por favor, insira de onde vem essa valor.');
+      return;
+    }
 
     try {
       await db.CreateTransaction({
-        categoryId: entradaCategoriaPadrao.id, 
+        titleEntrada: title,
         type: 'entrada',
         value: valorCentavos,
         date: new Date().toISOString(),
@@ -55,6 +61,7 @@ export default function Entrada() {
       dispatch({ type: 'receitas/setReceitas', payload: receitas });
 
       setValorCentavos(0);
+      setTitle('')
       router.push('/(tabs)');
     }catch (error) {
       console.error("Erro ao adicionar transação:", error);
@@ -92,7 +99,20 @@ export default function Entrada() {
         onChangeText={handleChange}
         placeholder="R$ 0,00"
         placeholderTextColor="#999"
+        onSubmitEditing={() => titleRef.current?.focus()}
+        returnKeyType="next"
+      />
+
+      <TextInput
+        style={styles.inputTitle}
+        keyboardType="default"
+        value={title}
+        onChangeText={e => setTitle(e)}
+        placeholder="digite de onde vem essa valor"
+        placeholderTextColor="#999"
         onSubmitEditing={() => handleAddTransaction()}
+        ref={titleRef}
+        returnKeyType="done"
       />
 
 
@@ -102,7 +122,7 @@ export default function Entrada() {
           handleAddTransaction();
         }}>
           <Feather name='arrow-right' size={30} color={'#FFF'} />
-        </TouchableOpacity>
+      </TouchableOpacity>
 
     </View>
   );
@@ -141,6 +161,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 0,
     color: '#000',
+  },
+  inputTitle: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginTop: 25,
+    paddingLeft: 10,
+    fontStyle: "italic",
   },
 });
 

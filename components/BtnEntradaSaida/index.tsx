@@ -54,27 +54,34 @@ export default function BtnEntradaSaida() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={[styles.button, styles.secondary, saidaStyle]}
-        onPress={() => {
-          router.push('/saida');
-          toggleMenu();
-        }}
-      >
-        <Feather name="arrow-up" size={20} color="#FFF" />
-        <Text style={styles.buttonText}>Saída</Text>
-      </TouchableOpacity>
+      <Animated.View style={[styles.button, styles.secondary, saidaStyle]}>
+        <TouchableOpacity
+          onPress={() => {
+            router.push('/saida');
+            toggleMenu();
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center'}}>
+            <Feather name="arrow-up" size={20} color="#FFF" />
+            <Text style={styles.buttonText}>Saída</Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
 
-      <TouchableOpacity
-        style={[styles.button, styles.secondary, entradaStyle]}
-        onPress={() => {
-          router.push('/entrada');
-          toggleMenu();
-        }}
-      >
-        <Feather name="arrow-down" size={20} color="#FFF" />
-        <Text style={styles.buttonText}>Entrada</Text>
-      </TouchableOpacity>
+      <Animated.View style={[styles.button, styles.secondary, entradaStyle]}>
+        <TouchableOpacity
+          onPress={() => {
+            router.push('/entrada');
+            toggleMenu();
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Feather name="arrow-down" size={20} color="#FFF" />
+            <Text style={styles.buttonText}>Entrada</Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+
 
       <TouchableOpacity style={[styles.button, styles.menu]} onPress={toggleMenu}>
         <Animated.View style={rotation}>

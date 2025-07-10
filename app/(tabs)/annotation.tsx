@@ -61,12 +61,18 @@ export default function Annotation() {
                 <Text style={styles.itemTotal}>{formatarValor(total)}</Text>
               </View>
               <View style={styles.divider} />
-              {item.itens?.map((subItem, index) => (
+              {item.itens?.slice(0, 3).map((subItem, index) => (
                 <View key={index} style={styles.subItemContainer}>
                   <Text style={styles.subItemContent}>{subItem.conteudo}</Text>
                   <Text style={styles.subItemValue}>{formatarValor(subItem.valor)}</Text>
                 </View>
               ))}
+              {item.itens && item.itens.length > 3 && (
+                <View style={styles.subItemContainer}>
+                  <Text style={[styles.subItemContent, { fontStyle: 'italic', color: '#004880'}]}>Outros...</Text>
+                  <Text style={styles.subItemValue}>+{item.itens.length - 3} conteúdos</Text>
+                </View>
+              )}
               <TouchableOpacity onPress={() => handleDeletar(item.id)} style={styles.deleteButton}>
                 <Feather name="trash-2" size={22} color="#E53935" />
               </TouchableOpacity>

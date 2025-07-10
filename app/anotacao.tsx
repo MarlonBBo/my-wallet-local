@@ -19,6 +19,8 @@ export default function Anotacao() {
   const conteudoRef = useRef<TextInput>(null);
   const valorRef = useRef<TextInput>(null);
 
+  const valorTotal = dados.reduce((total, item) => total + item.valor, 0);
+
   useEffect(() => {
     if (id) {
       const loadAnotacao = async () => {
@@ -34,15 +36,33 @@ export default function Anotacao() {
     }
   }, [id]);
 
-  function adicionarConteudo() {
+  async function adicionarConteudo() {
+    if (!mes.trim()) {
+      Alert.alert("Erro", "O campo 'Mês' é obrigatório.");
+      return;
+    }
+
     if (conteudoAtual.trim() && valorAtual) {
       const novoItem: AnotacaoItem = {
         conteudo: conteudoAtual,
-        valor: valorAtual
+        valor: valorAtual,
       };
-      setDados(prev => [...prev, novoItem]);
+
+      const novaLista = [...dados, novoItem];
+      setDados(novaLista);
       setConteudoAtual('');
       setValorAtual(0);
+
+      conteudoRef.current?.focus();
+
+      if (anotacaoId) {
+        await atualizarAnotacao(novaLista);
+      } else {
+        const novoId = await handleSalvarAnotacao(novaLista);
+        if (novoId) {
+          setAnotacaoId(novoId);
+        }
+      }
     }
   }
 
@@ -65,29 +85,23 @@ export default function Anotacao() {
     }
   }
 
-  async function handleSalvarAnotacao() {
-    if (!mes.trim()) {
-      Alert.alert("Erro", "O campo 'Mês' é obrigatório.");
-      return;
-    }
+  async function handleSalvarAnotacao(itens: AnotacaoItem[]): Promise<number | null> {
     try {
-      await salvarAnotacao(mes, dados);
-      router.back();
+      const idCriado = await salvarAnotacao(mes, itens);
+      return idCriado;
     } catch (error) {
       Alert.alert("Erro", "Não foi possível salvar a anotação.");
       console.error(error);
+      return null;
     }
   }
 
-  async function atualizarAnotacao() {
-    if (!mes.trim()) {
-      Alert.alert("Erro", "O campo 'Mês' é obrigatório.");
-      return;
-    }
+
+  async function atualizarAnotacao(itens: AnotacaoItem[]) {
+
     if (anotacaoId) {
       try {
-        await atualizarAnotacaoCompleta(anotacaoId, mes, dados);
-        router.back();
+        await atualizarAnotacaoCompleta(anotacaoId, mes, itens);
       } catch (error) {
         Alert.alert("Erro", "Não foi possível atualizar a anotação.");
         console.error(error);
@@ -96,6 +110,7 @@ export default function Anotacao() {
       Alert.alert("Erro", "Anotação não encontrada.");
     }
   }
+
 
   const handleChange = (text: string) => {
     const numeros = text.replace(/\D/g, '');
@@ -131,7 +146,7 @@ export default function Anotacao() {
           <View style={styles.inputGroup}>
             <TextInput
               style={styles.input}
-              placeholder="Descrição"
+              placeholder="Conteúdo"
               placeholderTextColor="#999"
               value={conteudoAtual}
               onChangeText={setConteudoAtual}
@@ -151,7 +166,11 @@ export default function Anotacao() {
             />
           </View>
 
-          <TouchableOpacity style={styles.addButton} onPress={adicionarConteudo}>
+          <TouchableOpacity
+            style={[styles.addButton, !mes.trim() && { opacity: 0.5 }]}
+            onPress={adicionarConteudo}
+            disabled={!mes.trim()}
+          >
             <Feather name="plus-circle" size={20} color="#FFF" />
             <Text style={styles.addButtonText}>Adicionar Item</Text>
           </TouchableOpacity>
@@ -159,7 +178,10 @@ export default function Anotacao() {
 
         {dados.length > 0 && (
           <View style={styles.listaContainer}>
-            <Text style={styles.listaTitulo}>Itens Adicionados</Text>
+            <View style={styles.listaHeader}>
+              <Text style={styles.listaTitulo}>Itens Adicionados</Text>
+              <Text style={styles.listaTotal}>{formatarValor(valorTotal)}</Text>
+            </View>
             {dados.map((item, index) => (
               <View key={index} style={styles.itemLista}>
                 <Text style={styles.itemTexto}>{item.conteudo}: <Text style={styles.itemValor}>{formatarValor(item.valor)}</Text></Text>
@@ -170,12 +192,6 @@ export default function Anotacao() {
             ))}
           </View>
         )}
-
-        <TouchableOpacity style={styles.saveButton} onPress={id ? atualizarAnotacao : handleSalvarAnotacao}>
-          <Feather name="save" size={20} color="#28a745" />
-          <Text style={styles.saveButtonText}>Salvar Anotação</Text>
-        </TouchableOpacity>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -309,5 +325,16 @@ const styles = StyleSheet.create({
     color: '#28a745',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  listaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  listaTotal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#004880',
   },
 });

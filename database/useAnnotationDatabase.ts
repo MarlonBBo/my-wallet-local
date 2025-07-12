@@ -5,26 +5,29 @@ export type AnotacaoItem = {
     anotacao_id?: number;
     conteudo: string;
     valor: number;
+    concluido: number;
+    
 };
 
 export type Anotacao = {
     id: number;
     mes: string;
+    tipo: string;
     itens?: AnotacaoItem[];
 };
 
 export function useAnnotationDatabase() {
     const db = useSQLiteContext();
 
-    async function salvarAnotacao(mes: string, dados: Omit<AnotacaoItem, 'id' | 'anotacao_id'>[]) {
+    async function salvarAnotacao(mes: string, tipo: string, dados: Omit<AnotacaoItem, 'id' | 'anotacao_id'>[]) {
         try {
-            const result = await db.runAsync(`INSERT INTO anotacoes (mes) VALUES (?);`, [mes]);
+            const result = await db.runAsync(`INSERT INTO anotacoes (mes, tipo) VALUES (?, ?);`, [mes, tipo]);
             const anotacaoId = result.lastInsertRowId;
 
             for (const item of dados) {
                 await db.runAsync(
-                    `INSERT INTO anotacao_itens (anotacao_id, conteudo, valor) VALUES (?, ?, ?);`,
-                    [anotacaoId, item.conteudo, item.valor]
+                    `INSERT INTO anotacao_itens (anotacao_id, conteudo, valor, concluido) VALUES (?, ?, ?, ?);`,
+                    [anotacaoId, item.conteudo, item.valor, item.concluido]
                 );
             }
             console.log("Anotação salva com sucesso! ID:", anotacaoId);
@@ -52,17 +55,18 @@ export function useAnnotationDatabase() {
     async function atualizarAnotacaoCompleta(
         id: number,
         novoMes: string,
+        novoTipo: string,
         novosItens: Omit<AnotacaoItem, 'id' | 'anotacao_id'>[]
         ) {
         try {
-            await db.runAsync(`UPDATE anotacoes SET mes = ? WHERE id = ?;`, [novoMes, id]);
+            await db.runAsync(`UPDATE anotacoes SET mes = ?, tipo = ? WHERE id = ?;`, [novoMes, novoTipo, id]);
 
             await db.runAsync(`DELETE FROM anotacao_itens WHERE anotacao_id = ?;`, [id]);
 
             for (const item of novosItens) {
             await db.runAsync(
-                `INSERT INTO anotacao_itens (anotacao_id, conteudo, valor) VALUES (?, ?, ?);`,
-                [id, item.conteudo, item.valor]
+                `INSERT INTO anotacao_itens (anotacao_id, conteudo, valor, concluido) VALUES (?, ?, ?, ?);`,
+                [id, item.conteudo, item.valor, item.concluido]
             );
             }
 
@@ -84,12 +88,25 @@ export function useAnnotationDatabase() {
         await db.runAsync(`DELETE FROM anotacao_itens WHERE id = ?;`, [id]);
     }
 
+    const atualizarTipoAnotacao = async (id: number, novoTipo: 'pagar' | 'receber') => {
+    try {
+        await db.runAsync(
+        `UPDATE anotacoes SET tipo = ? WHERE id = ?`,
+        [novoTipo, id]
+        );
+    } catch (error) {
+        console.error("Erro ao atualizar tipo da anotação:", error);
+        throw error;
+    }
+    };
+
     return {
         salvarAnotacao,
         listarAnotacoes,
         atualizarAnotacaoCompleta,
         deletarAnotacao,
         deletarItem,
+        atualizarTipoAnotacao,
     };
 }
 

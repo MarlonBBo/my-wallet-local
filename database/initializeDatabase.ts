@@ -1,5 +1,19 @@
 import { SQLiteDatabase } from "expo-sqlite";
 
+// export async function initializeDatabase(database: SQLiteDatabase) {
+//   try {
+//     await database.execAsync(`DROP TABLE IF EXISTS anotacao_itens`);
+//     await database.execAsync(`DROP TABLE IF EXISTS anotacoes`);
+//     await database.execAsync(`DROP TABLE IF EXISTS transactions`);
+//     await database.execAsync(`DROP TABLE IF EXISTS categorias`);
+
+//     console.log("Tabelas removidas com sucesso!");
+//   } catch (error) {
+//     console.error("Erro ao reiniciar o banco:", error);
+//   }
+// }
+
+
 export async function initializeDatabase(database: SQLiteDatabase) {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS categorias (
@@ -25,7 +39,8 @@ export async function initializeDatabase(database: SQLiteDatabase) {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS anotacoes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      mes TEXT NOT NULL
+      mes TEXT NOT NULL,
+      tipo TEXT CHECK(tipo IN ('receber', 'pagar')) DEFAULT 'pagar'
     );
   `);
 
@@ -35,6 +50,7 @@ export async function initializeDatabase(database: SQLiteDatabase) {
       anotacao_id INTEGER NOT NULL,
       conteudo TEXT NOT NULL,
       valor INTEGER NOT NULL,
+      concluido INTEGER DEFAULT 0,
       FOREIGN KEY (anotacao_id) REFERENCES anotacoes(id) ON DELETE CASCADE
     );
   `);

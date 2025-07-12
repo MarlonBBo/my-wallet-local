@@ -5,16 +5,25 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, Te
 import { AnotacaoItem, useAnnotationDatabase } from '../database/useAnnotationDatabase';
 import { formatarValor } from './(tabs)';
 
+
 export default function Anotacao() {
 
   const { id } = useLocalSearchParams();
-  const { salvarAnotacao, listarAnotacoes, deletarItem, atualizarAnotacaoCompleta } = useAnnotationDatabase();
+  const { salvarAnotacao, listarAnotacoes, deletarItem, atualizarAnotacaoCompleta, atualizarTipoAnotacao } = useAnnotationDatabase();
 
   const [mes, setMes] = useState('');
   const [conteudoAtual, setConteudoAtual] = useState('');
   const [valorAtual, setValorAtual] = useState(0);
   const [dados, setDados] = useState<AnotacaoItem[]>([]);
   const [anotacaoId, setAnotacaoId] = useState<number | null>(null);
+  const [tipo, setTipo] = useState<'pagar' | 'receber'>('pagar');
+  const [concluido, setConcluido] = useState(0);
+
+  const renderCheck = (checked: boolean) => (
+    <View style={[styles.checkbox, checked && styles.checked]}>
+      {checked && <View style={styles.checkboxInner} />}
+    </View>
+  );
 
   const conteudoRef = useRef<TextInput>(null);
   const valorRef = useRef<TextInput>(null);
@@ -30,6 +39,9 @@ export default function Anotacao() {
           setMes(anotacaoExistente.mes);
           setDados(anotacaoExistente.itens || []);
           setAnotacaoId(anotacaoExistente.id);
+          setTipo(anotacaoExistente.tipo === 'pagar' ? 'pagar' : 'receber')
+
+          console.log(anotacaoExistente)
         }
       };
       loadAnotacao();
@@ -46,6 +58,7 @@ export default function Anotacao() {
       const novoItem: AnotacaoItem = {
         conteudo: conteudoAtual,
         valor: valorAtual,
+        concluido: concluido
       };
 
       const novaLista = [...dados, novoItem];
@@ -87,7 +100,7 @@ export default function Anotacao() {
 
   async function handleSalvarAnotacao(itens: AnotacaoItem[]): Promise<number | null> {
     try {
-      const idCriado = await salvarAnotacao(mes, itens);
+      const idCriado = await salvarAnotacao(mes, tipo, itens);
       return idCriado;
     } catch (error) {
       Alert.alert("Erro", "Não foi possível salvar a anotação.");
@@ -101,7 +114,7 @@ export default function Anotacao() {
 
     if (anotacaoId) {
       try {
-        await atualizarAnotacaoCompleta(anotacaoId, mes, itens);
+        await atualizarAnotacaoCompleta(anotacaoId, mes, tipo, itens);
       } catch (error) {
         Alert.alert("Erro", "Não foi possível atualizar a anotação.");
         console.error(error);
@@ -166,6 +179,28 @@ export default function Anotacao() {
             />
           </View>
 
+          <View style={styles.containerCheck}>
+              <View style={styles.checkboxRow}>
+                <TouchableOpacity onPress={() => {
+                  setTipo('pagar');
+                  if (anotacaoId) atualizarTipoAnotacao(anotacaoId, 'pagar');
+                }} style={styles.checkboxWrapper}>
+                  {renderCheck(tipo === 'pagar')}
+                  <Text style={styles.labelPagar}>Pagar</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.checkboxRow}>
+                <TouchableOpacity onPress={() => {
+                  setTipo('receber');
+                  if (anotacaoId) atualizarTipoAnotacao(anotacaoId, 'receber');
+                }} style={styles.checkboxWrapper}>
+                  {renderCheck(tipo === 'receber')}
+                  <Text style={styles.labelReceber}>Receber</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
           <TouchableOpacity
             style={[styles.addButton, !mes.trim() && { opacity: 0.5 }]}
             onPress={adicionarConteudo}
@@ -180,11 +215,31 @@ export default function Anotacao() {
           <View style={styles.listaContainer}>
             <View style={styles.listaHeader}>
               <Text style={styles.listaTitulo}>Itens Adicionados</Text>
-              <Text style={styles.listaTotal}>{formatarValor(valorTotal)}</Text>
+              <Text style={[styles.listaTotal,{color: tipo === 'pagar' ? '#E53935' : '#28a745'} ]}>{formatarValor(valorTotal)}</Text>
             </View>
             {dados.map((item, index) => (
               <View key={index} style={styles.itemLista}>
-                <Text style={styles.itemTexto}>{item.conteudo}: <Text style={styles.itemValor}>{formatarValor(item.valor)}</Text></Text>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    const novaLista = [...dados];
+                    novaLista[index].concluido = novaLista[index].concluido === 1 ? 0 : 1;
+                    setDados(novaLista);
+                    atualizarAnotacao(novaLista);
+                  }}
+                  style={[styles.checkboxConcluido, item.concluido === 1 && styles.checkboxAtivo]}
+                >
+                  {item.concluido === 1 && <View style={styles.checkboxInnerConcluido} />}
+                </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.itemTexto,
+                    item.concluido === 1 && { textDecorationLine: 'line-through', color: '#999' }
+                  ]}
+                >
+                  {item.conteudo}: <Text style={[styles.itemValor, item.concluido === 1 && { textDecorationLine: 'line-through', color: '#999' }]}>{formatarValor(item.valor)}</Text>
+                </Text>
+
                 <TouchableOpacity onPress={() => removerConteudo(index)}>
                   <Feather name="trash-2" size={22} color="#E53935" />
                 </TouchableOpacity>
@@ -335,6 +390,69 @@ const styles = StyleSheet.create({
   listaTotal: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#004880',
+  },
+  containerCheck: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    width: "100%",
+    justifyContent: "space-between"
+  },
+  checkboxRow: {
+    marginBottom: 10,
+  },
+  checkboxWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#005A9C',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  checked: {
+    backgroundColor: '#005A9C',
+  },
+  checkboxInner: {
+    width: 10,
+    height: 10,
+    backgroundColor: '#005A9C',
+    borderRadius: 2,
+  },
+  labelPagar: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: '#E53935',
+  },
+  labelReceber: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: '#4CAF50',
+  },
+  checkboxConcluido: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#666',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+
+  checkboxAtivo: {
+    backgroundColor: '#005A9C',
+    borderColor: '#005A9C',
+  },
+
+  checkboxInnerConcluido: {
+    width: 10,
+    height: 10,
+    backgroundColor: '#005A9C',
+    borderRadius: 2,
   },
 });

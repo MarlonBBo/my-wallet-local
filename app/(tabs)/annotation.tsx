@@ -14,6 +14,11 @@ export default function Annotation() {
     setAnotacoes(dados);
   }
 
+  const getCorValor = (itemTipo: string, concluido: number) => {
+  if (concluido === 1) return '#999';
+  return itemTipo === 'pagar' ? '#E53935' : '#28a745';
+};
+
   useFocusEffect(
     useCallback(() => {
       carregarAnotacoes();
@@ -52,19 +57,42 @@ export default function Annotation() {
         data={anotacoes}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const total = item.itens?.reduce((acc, current) => acc + current.valor, 0) || 0;
+          const total = item.itens
+            ?.filter((i) => i.concluido !== 1) 
+            .reduce((acc, current) => acc + current.valor, 0) || 0;
+
 
           return (
             <TouchableOpacity style={styles.itemContainer} onPress={() => handleEditar(item.id)}>
               <View style={styles.itemHeader}>
                 <Text style={styles.itemTitle}>{item.mes}</Text>
-                <Text style={styles.itemTotal}>{formatarValor(total)}</Text>
+                <View style={{flexDirection: "row", gap: 3}}>
+                  <Text style={{fontWeight: "bold", fontSize: 15}}>{item.tipo === 'pagar' ? 'Pagar: ' : 'Receber: '}</Text>
+                <Text style={[styles.itemTotal, {color: item.tipo === 'pagar' ? '#E53935' : '#28a745'}]}>{formatarValor(total)}</Text>
+                </View>
               </View>
               <View style={styles.divider} />
-              {item.itens?.slice(0, 3).map((subItem, index) => (
+              {item.itens
+                ?.sort((a, b) => a.concluido - b.concluido)
+                .slice(0, 3)
+                .map((subItem, index) => (
                 <View key={index} style={styles.subItemContainer}>
-                  <Text style={styles.subItemContent}>{subItem.conteudo}</Text>
-                  <Text style={styles.subItemValue}>{formatarValor(subItem.valor)}</Text>
+                  <Text
+                    style={[
+                      styles.subItemContent,
+                      subItem.concluido === 1 && { textDecorationLine: 'line-through', color: '#999' }
+                    ]}
+                  >
+                    {subItem.conteudo}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.subItemValue,
+                      { color: getCorValor(item.tipo, subItem.concluido) }
+                    ]}
+                  >
+                    {formatarValor(subItem.valor)}
+                  </Text>
                 </View>
               ))}
               {item.itens && item.itens.length > 3 && (

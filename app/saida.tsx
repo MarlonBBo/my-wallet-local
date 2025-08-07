@@ -115,7 +115,6 @@ export default function Saida() {
         />
 
         <View style={{marginTop: 20, width: '100%', gap: 15 }}>
-          <View style={{ zIndex: 1000 }}>
             <DropDownPicker
               searchPlaceholder="Buscar categoria..."
               open={open}
@@ -140,12 +139,10 @@ export default function Saida() {
               dropDownContainerStyle={[styles.dropDownContainer, { maxHeight: 300 }]}
               textStyle={styles.dropDownText}
               placeholderStyle={styles.placeholderStyle}
-              listMode="SCROLLVIEW"
+              listMode="FLATLIST"
               ArrowDownIconComponent={() => <Feather name="chevron-down" size={20} color="#004880" />}
               ArrowUpIconComponent={() => <Feather name="chevron-up" size={20} color="#004880" />}
             />
-
-          </View>
         </View>
       </ScrollView>
 

@@ -10,20 +10,32 @@ import { formatarValor } from ".";
 
 export default function Categorias() {
   const coresDisponiveis = [
-  '#F44336',
-  '#E91E63',
-  '#9C27B0',
-  '#673AB7',
-  '#3F51B5',
-  '#03A9F4',
-  '#00BCD4',
-  '#009688',
-  '#4CAF50',
-  '#8BC34A',
-  '#FFEB3B',
-  '#FF9800',
-  '#FF5722',
-];
+    '#F44336', // vermelho
+    '#E91E63', // rosa
+    '#9C27B0', // roxo
+    '#673AB7', // roxo escuro
+    '#3F51B5', // índigo
+    '#2196F3', // azul
+    '#03A9F4', // azul claro
+    '#00BCD4', // ciano
+    '#009688', // teal
+    '#4CAF50', // verde
+    '#8BC34A', // verde claro
+    '#CDDC39', // lima
+    '#FFEB3B', // amarelo
+    '#FFC107', // âmbar
+    '#FF9800', // laranja
+    '#FF5722', // laranja avermelhado
+    '#795548', // marrom
+    '#9E9E9E', // cinza
+    '#607D8B', // azul acinzentado
+    '#B71C1C', // vermelho escuro
+    '#880E4F', // rosa escuro
+    '#4A148C', // roxo profundo
+    '#1A237E', // azul marinho
+    '#004D40', // verde petróleo
+  ];
+  
 
 
   const dispatch = useDispatch();
